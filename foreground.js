@@ -1,43 +1,48 @@
 var videoPlayers = [];
 var video;
 var subTitleHTML;
+var lastState = "None";
+var currentState;
 var apiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
 
+//Load overlay HTML
 var VideoOverlayHTML = document.createElement('DIV');
-VideoOverlayHTML.style = "position: absolute; z-index: 999999; background-color: rgb(89, 182, 194,0.3); width: 100%; height: 100%; z-index : 10000;";
-var highlightHTMLText = document.createElement('DIV');
-highlightHTMLText.style = "position: relative; text-align: center; font-size: 40px;  top: 50%; z-index : 10001;";
-highlightHTMLText.textContent = "This Video";
-VideoOverlayHTML.appendChild(highlightHTMLText);
+VideoOverlayHTML.id = "BetterSubtitlesOverlay";
+fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
+    .then(response=> response.text())
+    .then(response=> {
+        VideoOverlayHTML.innerHTML = response;
+
+        //Add listeners
+        var SearchSubtitlesButton = VideoOverlayHTML.querySelector("#SearchSubtitlesButton");
+        SearchSubtitlesButton.addEventListener("click", function() {
+            SearchSubtitles();
+        });
+    });
+
+
+
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if(request.message){console.log("Received message: " + request.message);}
 
-    if (request.message === 'DetectVideoPlayers') {  
+    if (request.message === 'CheckInjected') {
+        sendResponse({message:"already injected"});
+        return true;
+    }else if (request.message === 'DetectVideoPlayers') {  
         var _videoPlayers = DetectVideoPlayers();
         sendResponse({videoPlayers:_videoPlayers});
         return true;
-    }else if (request.message === 'AddSubtitles') {        
-        AddSubtitles();
-        sendResponse();
-        return true;
-    }else if (request.message === 'RemoveSubtitles') {        
-        RemoveSubtitles();
-        sendResponse();
-        return true;
-    }else if (request.message === 'SearchSubtitles') {        
-        SearchSubtitles(request.searchQuery);
-        return true;
     }else if (request.message === 'MouseEnterVideoPlayer') {
-        videoPlayers[request.index].parentElement.style = "height : 100%;";
-        videoPlayers[request.index].parentElement.appendChild(VideoOverlayHTML);
+        MouseEnterVideoPlayer(request.index);
         sendResponse();
         return true;
     }else if (request.message === 'MouseLeaveVideoPlayer') { 
-        VideoOverlayHTML.parentElement.removeChild(VideoOverlayHTML);
+        MouseLeaveVideoPlayer();
         sendResponse();
         return true;
     }else if (request.message === 'SelectVideoPlayer') {
+        SelectVideoPlayer(request.index);
         sendResponse();
         return true;
     }else {
@@ -57,7 +62,40 @@ function DetectVideoPlayers(){
     return videoPlayerTexts;
 }
 
-async function AddSubtitles() {
+function MouseEnterVideoPlayer(index) {
+    SetOverlayState("Highlight")
+    //videoPlayers[index].parentElement.style = "height : 100%;"; //make sure parent has height (youtube doesnt)
+    ParentOverlay(videoPlayers[index]);
+}
+function MouseLeaveVideoPlayer() {
+    VideoOverlayHTML.parentElement.removeChild(VideoOverlayHTML);
+
+    if(video){
+        SetOverlayState(currentState);
+        ParentOverlay(video);
+    }
+}
+function ParentOverlay(video) {
+    if(new RegExp('youtube.com').test(document.URL)){
+        video.parentElement.parentElement.appendChild(VideoOverlayHTML);
+    }else if(new RegExp('netflix.com').test(document.URL)){
+        video.parentElement.parentElement.parentElement.parentElement.parentElement.parentElement.appendChild(VideoOverlayHTML);
+    }else{
+        video.parentElement.appendChild(VideoOverlayHTML);
+    }
+}
+function SelectVideoPlayer(index) {
+    video = videoPlayers[index];
+    SetOverlayState("SearchSubtitles")
+}
+function SetOverlayState(state) {
+    lastState = currentState;
+    VideoOverlayHTML.querySelector('#VideoHighlight').hidden = (state !== 'Highlight');
+    VideoOverlayHTML.querySelector('#SearchSubtitlesOverlay').hidden = (state !== 'SearchSubtitles');
+    currentState = state;
+}
+
+function AddSubtitles() {
     console.log(`Adding Subtitles`);
     //console.log(`Searching videos on webpage`);
     
@@ -78,15 +116,45 @@ function RemoveSubtitles() {
         subTitleHTML.parentElement.removeChild(subtitels);
     }
 }
+
 function SearchSubtitles(searchQuery) {
+    var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+');
     console.log(`Searching Subtitles: `+ searchQuery);
     
-    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': apiKey}};
-
-    fetch(`https://api.opensubtitles.com/api/v1/subtitles?query=${searchQuery.replaceAll(" ","+")}`, options)//&order_by=test&order_direction=desc
+    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': apiKey}, mode: 'cors',};
+    const url = `https://api.opensubtitles.com/api/v1/subtitles?query=${searchQuery}`;
+    fetch(url, options)
     .then(response => response.json())
     .then(response => {
         console.log(response); 
+
+        var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
+        SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
+
+        if(!response || !response.data || response.data.length == 0){
+            var SomethingWentWrong = document.createElement('p');
+            SomethingWentWrong.innerHTML = "Something went wrong";
+
+            if(!response && response.errors){
+                SomethingWentWrong.innerHTML = response.errors[0];
+            }
+
+            SearchSubtitlesResultsContainer.appendChild(SomethingWentWrong);
+            return;
+        }
+
+        //Add movies to list
+        for (let i = 0; i < response.data.length; i++) {
+            var subtitleResultListItem = document.createElement('button');
+            subtitleResultListItem.className  = "subtitleResultListItem";
+            subtitleResultListItem.innerHTML = response.data[i].attributes.feature_details.movie_name;
+            SearchSubtitlesResultsContainer.appendChild(subtitleResultListItem);
+            subtitleResultListItem.addEventListener("click", function() {
+                console.log(`Clicked [${i}] movie: ${movieName}`); 
+            });
+            SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
+        }
+
         var movieName = response.data[0].attributes.feature_details.movie_name;
         console.log(`First result movie: ${movieName}`); 
         if(subTitleHTML){

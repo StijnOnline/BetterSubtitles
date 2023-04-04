@@ -1,8 +1,12 @@
-chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
-        ListVideoPlayers(response);
+chrome.runtime.sendMessage({message:"Inject"}, (response) => {
+    console.log("Response: " + response);
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
+            ListVideoPlayers(response);
+        });
     });
 });
+
 
 document.querySelector("#DetectVideoPlayers").addEventListener("click",
     function() {
@@ -11,21 +15,6 @@ document.querySelector("#DetectVideoPlayers").addEventListener("click",
                 ListVideoPlayers(response);
             });
         });
-    }
-);
-document.querySelector("#AddSubtitles").addEventListener("click",
-    function() {
-        SendMessageActiveTab({message:"AddSubtitles"});
-    }
-);
-document.querySelector("#RemoveSubtitles").addEventListener("click",
-    function() {
-        SendMessageActiveTab({message:"RemoveSubtitles"});
-    }
-);
-document.querySelector("#SearchSubtitles").addEventListener("click",
-    function() {
-        SendMessageActiveTab({message:"SearchSubtitles",searchQuery: document.querySelector("#SearchSubtitlesInput").value});
     }
 );
 
@@ -52,17 +41,17 @@ function GetVideoPlayers() {
 }
 
 function ListVideoPlayers(response){
-    console.log(response.videoPlayers);
     var videoPlayerListHTML = document.querySelector("#VideoPlayersList");
     videoPlayerListHTML.innerHTML = '';//remove all content
 
-    if(!response.videoPlayers || response.videoPlayers.length == 0){
+    if(!response || !response.videoPlayers || response.videoPlayers.length == 0){
         var videoPlayerListItem = document.createElement('p');
         videoPlayerListItem.innerHTML = "No Videoplayer found";
         videoPlayerListHTML.appendChild(videoPlayerListItem);
         return;
     }
 
+    console.log(response.videoPlayers);
     videoPlayerListHTML.innerHTML = "Select Videoplayer:";
     for (let i = 0; i < response.videoPlayers.length; i++) {
         var videoPlayerListItem = document.createElement('button');

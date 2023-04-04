@@ -1,0 +1,32 @@
+#BetterSubtitlesOverlay{
+
+}
+#BetterSubtitlesOverlay div{
+    position: relative;
+}
+#BetterSubtitlesOverlay #VideoHighlight{
+    position: absolute; 
+    z-index: 999999; 
+    background-color: rgb(89, 182, 194,0.3); 
+    width: 100%; 
+    height: 100%; 
+    z-index : 10000;
+}
+#BetterSubtitlesOverlay #VideoHighlight #VideoHighlightText{
+    position: relative; 
+    text-align: center; 
+    font-size: 40px;  
+    top: 50%; 
+    z-index : 10001;
+}
+
+
+
+#BetterSubtitlesOverlay #SearchSubtitlesOverlay{
+    position: absolute; 
+    z-index: 999999; 
+    background-color: rgba(107, 107, 107, 0.6); 
+    width: 100%; 
+    height: 100%; 
+    z-index : 10000;
+}
