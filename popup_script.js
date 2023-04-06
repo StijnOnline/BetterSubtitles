@@ -1,5 +1,8 @@
+
+//POPUP OPENED
+//Ask for inject (if not already)
 chrome.runtime.sendMessage({message:"Inject"}, (response) => {
-    console.log("Response: " + response);
+    {console.log("Response: " + response);}
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
             ListVideoPlayers(response);
@@ -7,22 +10,39 @@ chrome.runtime.sendMessage({message:"Inject"}, (response) => {
     });
 });
 
-
+//On refresh button: DetectVideoPlayers
 document.querySelector("#DetectVideoPlayers").addEventListener("click",
     function() {
-        chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-            chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
-                ListVideoPlayers(response);
+        chrome.runtime.sendMessage({message:"Inject"}, (response) => {
+            {console.log("Response: " + response);}
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+                chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
+                    ListVideoPlayers(response);
+                });
             });
         });
     }
 );
+
+
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if(request.message){console.log("Received message: " + request.message);}
+    if (request.message === 'bla') {
+        
+    }
+});
+
 
 function SendMessageActiveTab(message) {
     console.log("Sending: " + message);
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         chrome.tabs.sendMessage(tabs[0].id, message, (response) => {console.log("Response: " + response)});
     });
+}
+function SendMessage(message) {
+    console.log("Sending: " + message);
+    chrome.runtime.sendMessage(message, (response) => {console.log("Response: " + response)});
 }
 
 function GetVideoPlayers() {
@@ -52,11 +72,10 @@ function ListVideoPlayers(response){
     }
 
     console.log(response.videoPlayers);
-    videoPlayerListHTML.innerHTML = "Select Videoplayer:";
     for (let i = 0; i < response.videoPlayers.length; i++) {
         var videoPlayerListItem = document.createElement('button');
         videoPlayerListItem.id = "videoPlayer"+i;
-        videoPlayerListItem.className  = "videoPlayerListItem";
+        videoPlayerListItem.className  = "VideoPlayerListItem";
         videoPlayerListItem.innerHTML = response.videoPlayers;
         videoPlayerListHTML.appendChild(videoPlayerListItem);
         videoPlayerListItem.addEventListener("mouseenter", function() {

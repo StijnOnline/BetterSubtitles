@@ -11,10 +11,15 @@ function Inject(injectedEvent){
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {        
         tabs.forEach(tab => {
             chrome.tabs.sendMessage(tabs[0].id, {message:"CheckInjected"}, (response) => {
-                if(response) return;//already injected
+                if(response) { //already injected
+                    injectedEvent("Already injected");
+                    return;
+                }
+
 
                 if (tab.status !== 'complete' || !/^http/.test(tab.url)) {
                     console.log("INJECT: tab not injectable (not complete or not http)");
+                    injectedEvent("Tab not injectable");
                     return;
                 }            
 
@@ -31,10 +36,13 @@ function Inject(injectedEvent){
                     })
                     .then(() => {
                         console.log("INJECTED THE FOREGROUND SCRIPT.");
-                        injectedEvent();
+                        injectedEvent("SuccesfullyInjected");
                     });
                 })
-                .catch(err => console.log(err));
+                .catch(err => {
+                    console.log(err);
+                    injectedEvent(err);
+                });
             });
         });
 

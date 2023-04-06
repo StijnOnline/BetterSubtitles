@@ -6,27 +6,17 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <style>
-        body{
-            width: 300px;
-            height: 500px;
-        }
-        .videoPlayerListItem{
-            margin: 3px 0px; 
-            padding: 3px;
-            white-space: nowrap; 
-            overflow: hidden;
-        }
-        
-    </style>
+    <link rel="stylesheet" type="text/css" href="popup_styles.css">
 </head>
 
 <body>
     <div>
         <h1>Better Subtitles</h1>
-        <button id="DetectVideoPlayers">DetectVideoPlayers</button>
-        <div id="VideoPlayersList"></div>
-        
+            <div id="SelectVideoPlayers">
+                <h2>Select videoplayer:</h2>                
+                <button id="DetectVideoPlayers"><img src="images/refresh.svg"></button>
+            <div id="VideoPlayersList"></div>
+        </div>
     </div>
 
     <script src="./popup_script.js"></script>
