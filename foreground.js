@@ -13,6 +13,10 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
     .then(response=> {
         VideoOverlayHTML.innerHTML = response;
 
+        VideoOverlayHTML.querySelectorAll("img").forEach(img => {
+            img.src = chrome.runtime.getURL(img.getAttribute('src'));
+        });
+
         //Add listeners
         var SearchSubtitlesButton = VideoOverlayHTML.querySelector("#SearchSubtitlesButton");
         SearchSubtitlesButton.addEventListener("click", function() {
@@ -45,8 +49,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         SelectVideoPlayer(request.index);
         sendResponse();
         return true;
-    }else {
-        console.log("Unknown message: " + request.message);
     }
 });
 
@@ -71,7 +73,8 @@ function MouseLeaveVideoPlayer() {
     VideoOverlayHTML.parentElement.removeChild(VideoOverlayHTML);
 
     if(video){
-        SetOverlayState(currentState);
+        if(currentState==="Highlight")SetOverlayState(lastState);
+        else SetOverlayState(currentState);
         ParentOverlay(video);
     }
 }

@@ -57,4 +57,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }else {
         console.log("Did not receive the response!!!")
     }
+    
 });
+
+
+function SendMessageActiveTab(message) {
+    console.log("Sending: " + message);
+    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+        chrome.tabs.sendMessage(tabs[0].id, message, (response) => {console.log("Response: " + response)});
+    });
+}

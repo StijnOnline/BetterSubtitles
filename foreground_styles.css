@@ -30,3 +30,50 @@
     height: 100%; 
     z-index : 10000;
 }
+#SearchBox {
+    color: black;
+    height: 50px;
+    padding-left: 30px;
+    padding-top: 10px;
+    font-size: 30px;
+}
+#LanguageSelect {
+    height: 50px;
+    width: 200px;
+    margin-right: 20px;
+}
+#SearchSubtitlesInput {
+    height: 44px;
+    width: 70%;
+
+    background-color: white;
+    background: url('chrome-extension://__MSG_@@extension_id__/images/search.svg');
+    background-repeat: no-repeat;
+    background-position: 5px 5px;
+    background-size: 40px;
+    padding-left:55px;
+}
+#SearchSubtitlesButton {
+    padding: 0;    
+    width: 52px;
+}
+#SearchSubtitlesButton img{
+    height: 40px;
+    width: 40px;
+    margin-left: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+#HearingImpaired{
+    width: 75px;
+}
+#ForeignPartsOnly{
+    width: 75px;
+}
+#SeasonNumber{
+    width: 75px;
+}
+#EpisodeNumber{
+    width: 75px;
+}

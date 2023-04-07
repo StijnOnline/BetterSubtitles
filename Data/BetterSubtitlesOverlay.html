@@ -2,7 +2,39 @@
     <div id="VideoHighlightText">This Video</div>
 </div>
 <div id="SearchSubtitlesOverlay">
-    <h1>Search Subtitle:</h1>
-    <input type="text" id="SearchSubtitlesInput" value="john wick 3" > <button id="SearchSubtitlesButton" style="display: inline-block;">Search</button>
+
+    <div id="SearchBox">
+        <div style=" display: flex;">
+            <select name="language" id="LanguageSelect">
+                <option value="en">English</option>
+                <option value="saab">Saab</option>
+                <option value="mercedes">Mercedes</option>
+                <option value="audi">Audi</option>
+            </select>
+            <input id="SearchSubtitlesInput" type="text" placeholder="Search subtitles..." value="john wick 3" >
+            <button id="SearchSubtitlesButton" ><img src="images/search.svg"></button>
+        </div>
+        <div style=" display: flex; margin-top: 5px;">
+            <input type="checkbox" id="HearingImpaired" >
+            <input type="checkbox" id="ForeignPartsOnly" >
+            <input id="SeasonNumber" type="number" placeholder="Season nr" >
+            <input id="EpisodeNumber" type="number" placeholder="Episode nr" >
+        </div>
+    </div>
+    
+
+
+
     <div id="SearchSubtitlesResultsContainer"></div>
 </div>
+<!-- 
+episode_number integer
+
+
+foreign_parts_only string exclude, include, only (default: include)
+
+hearing_impaired string include, exclude, only. (default: include)
+
+
+season_number integer
+-->

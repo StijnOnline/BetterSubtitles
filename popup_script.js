@@ -1,28 +1,20 @@
-
 //POPUP OPENED
-//Ask for inject (if not already)
-chrome.runtime.sendMessage({message:"Inject"}, (response) => {
-    {console.log("Response: " + response);}
-    chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
-            ListVideoPlayers(response);
-        });
-    });
-});
+RequestInject();
+document.querySelector("#DetectVideoPlayers").addEventListener("click", RequestInject );
 
-//On refresh button: DetectVideoPlayers
-document.querySelector("#DetectVideoPlayers").addEventListener("click",
-    function() {
-        chrome.runtime.sendMessage({message:"Inject"}, (response) => {
-            {console.log("Response: " + response);}
-            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-                chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
-                    ListVideoPlayers(response);
-                });
+
+//Ask for inject (if not already)
+//on response, ask DetectVideoPlayers
+async function RequestInject(){
+    chrome.runtime.sendMessage({message:"Inject"}, async (response) => {
+        {console.log("Response: " + response);}
+        chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, {message:"DetectVideoPlayers"}, (response) => {
+                ListVideoPlayers(response);
             });
         });
-    }
-);
+    });
+}
 
 
 
@@ -66,7 +58,7 @@ function ListVideoPlayers(response){
 
     if(!response || !response.videoPlayers || response.videoPlayers.length == 0){
         var videoPlayerListItem = document.createElement('p');
-        videoPlayerListItem.innerHTML = "No Videoplayer found";
+        videoPlayerListItem.innerHTML = `No Videoplayer found`;
         videoPlayerListHTML.appendChild(videoPlayerListItem);
         return;
     }
