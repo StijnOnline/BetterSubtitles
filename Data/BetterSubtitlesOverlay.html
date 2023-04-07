@@ -2,39 +2,24 @@
     <div id="VideoHighlightText">This Video</div>
 </div>
 <div id="SearchSubtitlesOverlay">
+    <button id="CloseOverlay" >X</button>
 
     <div id="SearchBox">
-        <div style=" display: flex;">
+        <div id="SearchBox1">
             <select name="language" id="LanguageSelect">
                 <option value="en">English</option>
-                <option value="saab">Saab</option>
-                <option value="mercedes">Mercedes</option>
-                <option value="audi">Audi</option>
+                <option value="fr">French</option>
             </select>
-            <input id="SearchSubtitlesInput" type="text" placeholder="Search subtitles..." value="john wick 3" >
+            <input id="SearchSubtitlesInput" type="text" placeholder="Movie Name..." value="john wick 3" >
             <button id="SearchSubtitlesButton" ><img src="images/search.svg"></button>
+            <button id="ImportSubtitles" ><img src="images/import.svg"></button>
         </div>
-        <div style=" display: flex; margin-top: 5px;">
-            <input type="checkbox" id="HearingImpaired" >
-            <input type="checkbox" id="ForeignPartsOnly" >
-            <input id="SeasonNumber" type="number" placeholder="Season nr" >
-            <input id="EpisodeNumber" type="number" placeholder="Episode nr" >
+        <div id="SearchBox2">
+            <input type="checkbox" id="HearingImpaired" ><label>Hearing impaired</label>
+            <input type="checkbox" id="ForeignPartsOnly" ><label>Foreign parts only</label>
+            <label id="SeasonLabel">Season:</label> <input id="SeasonNumber" type="number" placeholder="nr." >
+            <label id="EpisodeLabel">Episode:</label> <input id="EpisodeNumber" type="number" placeholder="nr." >
         </div>
     </div>
-    
-
-
-
     <div id="SearchSubtitlesResultsContainer"></div>
 </div>
-<!-- 
-episode_number integer
-
-
-foreign_parts_only string exclude, include, only (default: include)
-
-hearing_impaired string include, exclude, only. (default: include)
-
-
-season_number integer
--->

@@ -5,6 +5,13 @@ var lastState = "None";
 var currentState;
 var apiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
 
+//Search input nodes
+var LanguageSelect;
+var HearingImpaired;
+var ForeignPartsOnly;
+var SeasonNumber;
+var EpisodeNumber;
+
 //Load overlay HTML
 var VideoOverlayHTML = document.createElement('DIV');
 VideoOverlayHTML.id = "BetterSubtitlesOverlay";
@@ -18,9 +25,27 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         });
 
         //Add listeners
+        var CloseOverlayButton = VideoOverlayHTML.querySelector("#CloseOverlay");
+        CloseOverlayButton.addEventListener("click", function() {
+            SetOverlayState("None")
+        });
+
+
+        //Search Tab
         var SearchSubtitlesButton = VideoOverlayHTML.querySelector("#SearchSubtitlesButton");
         SearchSubtitlesButton.addEventListener("click", function() {
             SearchSubtitles();
+        });
+        LanguageSelect = VideoOverlayHTML.querySelector("#LanguageSelect");
+        HearingImpaired = VideoOverlayHTML.querySelector("#HearingImpaired");
+        ForeignPartsOnly = VideoOverlayHTML.querySelector("#ForeignPartsOnly");
+        SeasonNumber = VideoOverlayHTML.querySelector("#SeasonNumber");
+        EpisodeNumber = VideoOverlayHTML.querySelector("#EpisodeNumber");
+        HearingImpaired.addEventListener("click", function() {
+            if(HearingImpaired.checked) ForeignPartsOnly.checked = false;
+        });
+        ForeignPartsOnly.addEventListener("click", function() {
+            if(ForeignPartsOnly.checked) HearingImpaired.checked = false;
         });
     });
 
@@ -124,8 +149,30 @@ function SearchSubtitles(searchQuery) {
     var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+');
     console.log(`Searching Subtitles: `+ searchQuery);
     
+
+    /*
+    API PARAMETERS ORDER:
+    episode_number      integer
+    foreign_parts_only  string          exclude, include, only (default: include)
+    hearing_impaired    string          include, exclude, only. (default: include)
+    languages           string          Language code(s), coma separated (en,fr)
+    order_by            string              See https://opensubtitles.stoplight.io/docs/opensubtitles-api/a172317bd5ccc-search-for-subtitles
+    order_direction     string          asc,desc
+    query               string
+    season_number       integer
+    */
+
+    const urlParams = new URLSearchParams();
+    if(EpisodeNumber.value) {urlParams.append("episode_number",EpisodeNumber.value)}
+    if(ForeignPartsOnly.checked) {urlParams.append("foreign_parts_only","only")} else {urlParams.append("foreign_parts_only","exclude")}
+    if(HearingImpaired.checked) {urlParams.append("hearing_impaired","only")} else {urlParams.append("hearing_impaired","exclude")}
+    urlParams.append("languages",LanguageSelect.value);
+    urlParams.append("query",searchQuery);
+    if(SeasonNumber.value) {urlParams.append("season_number",SeasonNumber.value)}
+
     const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': apiKey}, mode: 'cors',};
-    const url = `https://api.opensubtitles.com/api/v1/subtitles?query=${searchQuery}`;
+    const url = `https://api.opensubtitles.com/api/v1/subtitles?${urlParams.toString()}`;
+    console.log(`Getting Subtitles, api url: ${url}`);
     fetch(url, options)
     .then(response => response.json())
     .then(response => {
@@ -149,11 +196,11 @@ function SearchSubtitles(searchQuery) {
         //Add movies to list
         for (let i = 0; i < response.data.length; i++) {
             var subtitleResultListItem = document.createElement('button');
-            subtitleResultListItem.className  = "subtitleResultListItem";
+            subtitleResultListItem.className  = "SubtitleResultListItem";
             subtitleResultListItem.innerHTML = response.data[i].attributes.feature_details.movie_name;
             SearchSubtitlesResultsContainer.appendChild(subtitleResultListItem);
             subtitleResultListItem.addEventListener("click", function() {
-                console.log(`Clicked [${i}] movie: ${movieName}`); 
+                console.log(`Clicked [${i}] movie: ${response.data[i].attributes.feature_details.movie_name}`); 
             });
             SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
         }

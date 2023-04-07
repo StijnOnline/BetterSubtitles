@@ -30,12 +30,43 @@
     height: 100%; 
     z-index : 10000;
 }
-#SearchBox {
-    color: black;
-    height: 50px;
-    padding-left: 30px;
-    padding-top: 10px;
+#CloseOverlay{
+    position: absolute;
+    top: 0;
+    right: 0;
+
+    width: 40px; 
+    height: 40px; 
     font-size: 30px;
+    padding: 0 0 5px 5px;
+    
+    z-index: 1000;
+
+    border: none;
+    border-radius: 0 0 0 10px;
+    background-color: #0000003b;
+    color: black;
+}
+#CloseOverlay:hover{
+    background-color: #0000008f;
+}
+
+
+
+
+#SearchBox {    
+    height: 90px;
+    padding: 20px;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+
+    background-color: #e6f9ffe8;
+    color: black;
+    font-size: 30px;
+}
+
+#SearchBox1 {
+    display: flex;
 }
 #LanguageSelect {
     height: 50px;
@@ -44,10 +75,10 @@
 }
 #SearchSubtitlesInput {
     height: 44px;
-    width: 70%;
+    width: 750px;
 
     background-color: white;
-    background: url('chrome-extension://__MSG_@@extension_id__/images/search.svg');
+    background-image: url('chrome-extension://__MSG_@@extension_id__/images/search.svg');
     background-repeat: no-repeat;
     background-position: 5px 5px;
     background-size: 40px;
@@ -56,6 +87,7 @@
 #SearchSubtitlesButton {
     padding: 0;    
     width: 52px;
+    margin-left: 10px;
 }
 #SearchSubtitlesButton img{
     height: 40px;
@@ -65,15 +97,80 @@
     margin-left: auto;
     margin-right: auto;
 }
-#HearingImpaired{
-    width: 75px;
+#ImportSubtitles {
+    padding: 0;    
+    width: 52px;
+    margin-left: 10px;
+}
+#ImportSubtitles img{
+    height: 40px;
+    width: 40px;
+    margin-left: 5px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+
+
+#SearchBox2 {
+    display: flex;
+    height: 30px;
+    margin-top: 10px;
+    font-size: 25px;
+}
+#HearingImpaired{    
+    width: 30px;
+    margin-right: 5px;
 }
 #ForeignPartsOnly{
-    width: 75px;
+    width: 30px;
+    margin-right: 5px;
+    margin-left: 30px;
+}
+#SeasonLabel{
+    margin-left: 100px;
 }
 #SeasonNumber{
     width: 75px;
+    margin-left: 20px;
+}
+#EpisodeLabel{
+    margin-left: 20px;
 }
 #EpisodeNumber{
     width: 75px;
+    margin-left: 20px;
+}
+
+
+.SubtitleResultListItem{
+    font-size: 20px;
+    margin: 5px 0 0 20px;
+    color: black;
+    width: 95%;
+    text-align: left;
+    height: 40px;
+    margin-right: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+/*REMOVE NUMBER FIELD ARROWS*/
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
 }
