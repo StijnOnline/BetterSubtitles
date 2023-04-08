@@ -1,25 +1,40 @@
-<div id="VideoHighlight">
-    <div id="VideoHighlightText">This Video</div>
-</div>
-<div id="SearchSubtitlesOverlay">
-    <button id="CloseOverlay" >X</button>
+<!-- div overlay -->
+    <div id="VideoHighlight">
+        <div id="VideoHighlightText">This Video</div>
+    </div>
 
-    <div id="SearchBox">
-        <div id="SearchBox1">
-            <select name="language" id="LanguageSelect">
-                <option value="en">English</option>
-                <option value="fr">French</option>
-            </select>
-            <input id="SearchSubtitlesInput" type="text" placeholder="Movie Name..." value="john wick 3" >
-            <button id="SearchSubtitlesButton" ><img src="images/search.svg"></button>
-            <button id="ImportSubtitles" ><img src="images/import.svg"></button>
-        </div>
-        <div id="SearchBox2">
-            <input type="checkbox" id="HearingImpaired" ><label>Hearing impaired</label>
-            <input type="checkbox" id="ForeignPartsOnly" ><label>Foreign parts only</label>
-            <label id="SeasonLabel">Season:</label> <input id="SeasonNumber" type="number" placeholder="nr." >
-            <label id="EpisodeLabel">Episode:</label> <input id="EpisodeNumber" type="number" placeholder="nr." >
+
+    <div id="SearchSubtitlesOverlay">
+        <button id="CloseOverlay">X</button>
+
+        <div id="SearchBox">
+            <div id="SearchBox1">
+                <select name="language" id="LanguageSelect">
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                </select>
+                <input id="SearchSubtitlesInput" type="text" placeholder="Movie Name...">
+                <button id="SearchSubtitlesButton"><img src="images/search.svg"></button>
+
+                <label id="ImportSubtitlesButton" for="ImportSubtitles">
+                    <input id="ImportSubtitles" type="file" accept=".srt">
+                    <img src="images/import.svg">
+                </label>
+            </div>
+            <div id="SearchBox2">
+                <input type="checkbox" id="HearingImpaired"><label>Hearing impaired</label>
+                <input type="checkbox" id="ForeignPartsOnly"><label>Foreign parts only</label>
+                <label id="SeasonLabel">Season:</label> <input id="SeasonNumber" type="number" placeholder="nr.">
+                <label id="EpisodeLabel">Episode:</label> <input id="EpisodeNumber" type="number" placeholder="nr.">
+            </div>
+            <div id="SearchSubtitlesResultsContainer">
+
+            </div>
         </div>
     </div>
-    <div id="SearchSubtitlesResultsContainer"></div>
-</div>
+
+
+    <div id="Subtitles">
+
+    </div>
+<!-- /div overlay -->

@@ -1,9 +1,9 @@
-var videoPlayers = [];
-var video;
-var subTitleHTML;
-var lastState = "None";
-var currentState;
-var apiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
+var VideoPlayers = [];
+var SelectedVideo;
+var SubTitleHTML;
+var LastState = "None";
+var CurrentState;
+var ApiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
 
 //Search input nodes
 var LanguageSelect;
@@ -11,6 +11,12 @@ var HearingImpaired;
 var ForeignPartsOnly;
 var SeasonNumber;
 var EpisodeNumber;
+var ImportSubtitlesButton;
+var SubtitlesHTML;
+
+var SubtitlesData = [];//array of subtitles: {startTime,endTime,subtitle}[]
+var CurrentSubtitleIndex;
+var LastVideoTimestamp;
 
 //Load overlay HTML
 var VideoOverlayHTML = document.createElement('DIV');
@@ -41,11 +47,17 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         ForeignPartsOnly = VideoOverlayHTML.querySelector("#ForeignPartsOnly");
         SeasonNumber = VideoOverlayHTML.querySelector("#SeasonNumber");
         EpisodeNumber = VideoOverlayHTML.querySelector("#EpisodeNumber");
+        ImportSubtitlesButton = VideoOverlayHTML.querySelector("#ImportSubtitles");
+        SubtitlesHTML = VideoOverlayHTML.querySelector("#Subtitles");
         HearingImpaired.addEventListener("click", function() {
             if(HearingImpaired.checked) ForeignPartsOnly.checked = false;
         });
         ForeignPartsOnly.addEventListener("click", function() {
             if(ForeignPartsOnly.checked) HearingImpaired.checked = false;
+        });
+        ImportSubtitlesButton.addEventListener("change", function() {
+            console.log("Import Changed");
+            ImportSubtitle();
         });
     });
 
@@ -78,11 +90,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 function DetectVideoPlayers(){
-    videoPlayers = [];
+    VideoPlayers = [];
     let videoPlayerTexts = [];
     document.querySelectorAll('video').forEach(video => {
         if(video.src) {
-            videoPlayers.push(video);
+            VideoPlayers.push(video);
             videoPlayerTexts.push(video.src);
         }
     });
@@ -92,15 +104,15 @@ function DetectVideoPlayers(){
 function MouseEnterVideoPlayer(index) {
     SetOverlayState("Highlight")
     //videoPlayers[index].parentElement.style = "height : 100%;"; //make sure parent has height (youtube doesnt)
-    ParentOverlay(videoPlayers[index]);
+    ParentOverlay(VideoPlayers[index]);
 }
 function MouseLeaveVideoPlayer() {
     VideoOverlayHTML.parentElement.removeChild(VideoOverlayHTML);
 
-    if(video){
-        if(currentState==="Highlight")SetOverlayState(lastState);
-        else SetOverlayState(currentState);
-        ParentOverlay(video);
+    if(SelectedVideo){
+        if(CurrentState==="Highlight")SetOverlayState(LastState);
+        else SetOverlayState(CurrentState);
+        ParentOverlay(SelectedVideo);
     }
 }
 function ParentOverlay(video) {
@@ -113,37 +125,18 @@ function ParentOverlay(video) {
     }
 }
 function SelectVideoPlayer(index) {
-    video = videoPlayers[index];
+    SelectedVideo = VideoPlayers[index];
     SetOverlayState("SearchSubtitles")
 }
 function SetOverlayState(state) {
-    lastState = currentState;
+    LastState = CurrentState;
+    //TODO not query but cache?
     VideoOverlayHTML.querySelector('#VideoHighlight').hidden = (state !== 'Highlight');
     VideoOverlayHTML.querySelector('#SearchSubtitlesOverlay').hidden = (state !== 'SearchSubtitles');
-    currentState = state;
+    SubtitlesHTML.hidden = (state !== 'Subtitles');
+    CurrentState = state;
 }
 
-function AddSubtitles() {
-    console.log(`Adding Subtitles`);
-    //console.log(`Searching videos on webpage`);
-    
-
-    if(videoPlayers.length>0){
-        video = videoPlayers[0];
-        RemoveSubtitles();
-
-        subTitleHTML = document.createElement('DIV');
-        subTitleHTML.style = " position: absolute; text-align: center; width: 100%;  font-size: 30px; bottom: 10%; z-index : 10000;";
-        subTitleHTML.innerHTML = `Hello<br>World`;
-    
-        video.parentElement.parentElement.appendChild(subTitleHTML);
-    }
-}
-function RemoveSubtitles() {
-    if(subTitleHTML){
-        subTitleHTML.parentElement.removeChild(subtitels);
-    }
-}
 
 function SearchSubtitles(searchQuery) {
     var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+');
@@ -170,7 +163,7 @@ function SearchSubtitles(searchQuery) {
     urlParams.append("query",searchQuery);
     if(SeasonNumber.value) {urlParams.append("season_number",SeasonNumber.value)}
 
-    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': apiKey}, mode: 'cors',};
+    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': ApiKey}, mode: 'cors',};
     const url = `https://api.opensubtitles.com/api/v1/subtitles?${urlParams.toString()}`;
     console.log(`Getting Subtitles, api url: ${url}`);
     fetch(url, options)
@@ -207,11 +200,93 @@ function SearchSubtitles(searchQuery) {
 
         var movieName = response.data[0].attributes.feature_details.movie_name;
         console.log(`First result movie: ${movieName}`); 
-        if(subTitleHTML){
-            subTitleHTML.innerHTML = movieName;
+        if(SubTitleHTML){
+            SubTitleHTML.innerHTML = movieName;
         }
     }).catch(err => console.error(err));
 
     
 }
 
+function ImportSubtitle(){
+    var SubtitleFile = ImportSubtitlesButton.files[0];
+    console.log(SubtitleFile);
+
+    var reader = new FileReader();
+    reader.onload = function(e){
+        //console.log(e.target.result);
+        ParseSubtitle(e.target.result)
+    }
+    reader.readAsText(SubtitleFile);
+}
+
+function DownloadSubtitle(){
+    //TODO smart caching stuff
+}
+
+//srt file contents as string
+function ParseSubtitle(allSubtitles){
+    SubtitlesData = [];
+    var lines = allSubtitles.split(/\r?\n/);
+    var i = 0;
+
+    var subTitle = {};
+    while(i<lines.length){
+        
+        if(!lines[i]){//empty line
+            if(!(subTitle && Object.keys(subTitle).length === 0 && subTitle.constructor === Object)) {//thorough check if empty
+                SubtitlesData.push(subTitle);
+            }
+            i++
+        }else if(!isNaN(lines[i])){//new index
+            subTitle = {};//new subtitle object
+            i++
+        }else if(lines[i].includes("-->")){//timestamp
+            var split = lines[i].split("-->");
+            subTitle.startTime = ParseTimeStamp(split[0]);
+            subTitle.endTime = ParseTimeStamp(split[1]);
+            i++
+        }else {
+            if(subTitle.content){
+                subTitle.content += "<br>"+lines[i];
+            }else{
+                subTitle.content = lines[i];
+            }
+            i++
+        }
+    }
+    console.log(SubtitlesData);
+    AddSubtitles();
+    UpdateSubtitles();
+    SetOverlayState("Subtitles");
+}
+
+function ParseTimeStamp(t){
+    //Format = 00:02:04,743 to seconds as number
+    return Number(t.split(':')[0]) * 60 * 60 + //hours
+            Number(t.split(':')[1]) * 60 + //minutes
+            Number(t.split(':')[2].split(',')[0]) + //seconds
+            Number(t.split(',')[1]) * 0.001; //miliseconds
+}
+
+
+function AddSubtitles() {
+    console.log(`Adding Subtitles`);
+    RemoveSubtitles(); 
+
+    if(SelectedVideo){   
+        SelectedVideo.parentElement.parentElement.appendChild(SubtitlesHTML);
+    }
+}
+function RemoveSubtitles() {
+    if(SubtitlesHTML){
+        SubtitlesHTML.parentElement.removeChild(SubtitlesHTML);
+    }
+}
+function UpdateSubtitles() {
+    if(!SelectedVideo){return;}
+    var t = SelectedVideo.currentTime;
+    var sub = SubtitlesData.find(item=> item.startTime>=t && t<=item.endTime)
+    console.log(`Subtitle at ${t}: ${sub.content}`);
+    SubtitlesHTML.innerHTML = sub.content;
+}

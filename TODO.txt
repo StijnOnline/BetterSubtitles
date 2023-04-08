@@ -1,4 +1,6 @@
-inject & detect videoPlayers on popup opened
-Fix for different video players
+DetectvideoPlayer: better videoPlayer name (get title)
+search result: better subtitle name
+Code different sites?
 Subtitles html
-Download subtitles
+Download subtitles > cache file
+Language options
