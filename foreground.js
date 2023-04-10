@@ -15,8 +15,8 @@ var ImportSubtitlesButton;
 var SubtitlesHTML;
 
 var SubtitlesData = [];//array of subtitles: {startTime,endTime,subtitle}[]
-var CurrentSubtitleIndex;
-var LastVideoTimestamp;
+var CurrentSubtitleIndex = 0;
+var LastVideoTimestamp = 0;
 
 //Load overlay HTML
 var VideoOverlayHTML = document.createElement('DIV');
@@ -134,6 +134,12 @@ function SetOverlayState(state) {
     VideoOverlayHTML.querySelector('#VideoHighlight').hidden = (state !== 'Highlight');
     VideoOverlayHTML.querySelector('#SearchSubtitlesOverlay').hidden = (state !== 'SearchSubtitles');
     SubtitlesHTML.hidden = (state !== 'Subtitles');
+    if(SelectedVideo) {
+        SelectedVideo.removeEventListener("timeupdate",UpdateSubtitles);
+        if(state === 'Subtitles'){
+            SelectedVideo.addEventListener("timeupdate",UpdateSubtitles);}
+    };
+
     CurrentState = state;
 }
 
@@ -283,10 +289,94 @@ function RemoveSubtitles() {
         SubtitlesHTML.parentElement.removeChild(SubtitlesHTML);
     }
 }
+
+
+
+//var subIndex = SubtitlesData.findIndex(item=> item.startTime>=t && t<=item.endTime);
 function UpdateSubtitles() {
     if(!SelectedVideo){return;}
+    var sub = null;
     var t = SelectedVideo.currentTime;
-    var sub = SubtitlesData.find(item=> item.startTime>=t && t<=item.endTime)
-    console.log(`Subtitle at ${t}: ${sub.content}`);
-    SubtitlesHTML.innerHTML = sub.content;
+
+    //if new time is less than 2min later than last sub, just search forward
+    if(t > LastVideoTimestamp && (t - LastVideoTimestamp) < 120){ 
+        var subIndex = CurrentSubtitleIndex;
+        while(subIndex < SubtitlesData.length){
+            var item = SubtitlesData[subIndex]
+            if(t>=item.startTime && t<=item.endTime){
+                CurrentSubtitleIndex = subIndex;
+                sub = SubtitlesData[subIndex];
+                break;
+            }
+            subIndex++;
+        }
+    }
+    
+    //if new time is less than 2min earlier than last sub, just search backward
+    else if(t < LastVideoTimestamp && (LastVideoTimestamp - t) < 120){
+        var subIndex = CurrentSubtitleIndex;
+        while(subIndex > 0){
+            var item = SubtitlesData[subIndex]
+            if(t>=item.startTime && t<=item.endTime){
+                CurrentSubtitleIndex = subIndex;
+                sub = SubtitlesData[subIndex];
+                break;
+            }
+            subIndex--;
+        }
+    }
+
+    //else its more effecient to use binary search (because array is sorted)
+    else{
+        var result;
+        if(t > LastVideoTimestamp){
+            result = BinarySearchSubtitles(t,CurrentSubtitleIndex,SubtitlesData.length-1);
+        }else if(t < LastVideoTimestamp && CurrentSubtitleIndex !== 0){
+            result = BinarySearchSubtitles(t,0,CurrentSubtitleIndex);
+        }else {
+            result = BinarySearchSubtitles(t,0,SubtitlesData.length-1);
+        }
+        console.log(`Binary search ${t} result:`);
+        console.log(result);
+        if(result){
+            if(result.found){
+                sub = SubtitlesData[subIndex];
+            }
+            if(result.index){
+                CurrentSubtitleIndex = result.index;
+            }
+        }
+    }
+
+    LastVideoTimestamp = t;
+
+    if(sub){
+        SubtitlesHTML.innerHTML = sub.content;
+        //console.log(`Subtitle at ${t}: ${sub.content}`);
+    }else{
+        SubtitlesHTML.innerHTML = "";
+        //console.log(`No sub at ${t}`);
+    }
+}
+
+//https://www.geeksforgeeks.org/binary-search-in-javascript/
+function BinarySearchSubtitles(t, start, end){         
+    // Iterate while start not meets end
+    var mid;
+    while (start<=end){
+ 
+        // Find the mid index
+        mid=Math.floor((start + end)/2);
+  
+        // If element is present at mid, return True
+        if (t>=SubtitlesData[mid].startTime && t<=SubtitlesData[mid].endTime) return {found:true, index: mid};
+ 
+        // Else look in left or right half accordingly
+        else if (SubtitlesData[mid].startTime < t)
+             start = mid + 1;
+        else
+             end = mid - 1;
+    }
+  
+    return {found:false, index: mid};
 }
