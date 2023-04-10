@@ -190,11 +190,9 @@
     font-size: 25px;
     padding: 4px;
 }
-.SubtitleResultListItem_User {
-    display: inline-block;
-    font-size: 16px;
+.SubtitleResultListItem_FullName {
+    font-size: 14px;
     color: gray;
-    margin-left: 3px;
 }
 .SubtitleResultListItem_Info{
     display: flex;
@@ -231,8 +229,8 @@
 
 
 
-
-
+/* Force hidden to hide again even if other css is more specific */
+[hidden] { display: none !important; }
 
 /*REMOVE NUMBER FIELD ARROWS*/
 /* Chrome, Safari, Edge, Opera */

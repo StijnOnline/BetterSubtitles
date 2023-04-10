@@ -42,6 +42,7 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         var SearchSubtitlesButton = VideoOverlayHTML.querySelector("#SearchSubtitlesButton");
         SearchSubtitlesButton.addEventListener("click", function() {
             SearchSubtitles();
+            //SearchFeatures();
         });
         LanguageSelect = VideoOverlayHTML.querySelector("#LanguageSelect");
         HearingImpaired = VideoOverlayHTML.querySelector("#HearingImpaired");
@@ -208,6 +209,7 @@ function SearchSubtitles(searchQuery) {
 
             _subtitleResultListItem.addEventListener("click", function() {
                 console.log(`Clicked [${i}] movie: ${response.data[i].attributes.feature_details.title}`); 
+                GetSubtitle(response.data[i]);
             });
             SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
         }
@@ -215,6 +217,61 @@ function SearchSubtitles(searchQuery) {
 
     
 }
+
+/*
+function SearchFeatures(searchQuery) {
+    var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+');
+    console.log(`Searching Features: `+ searchQuery);
+    
+
+
+    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': ApiKey}, mode: 'cors',};
+    const url = `https://api.opensubtitles.com/api/v1/features?query=${searchQuery}`;
+
+    console.log(`Getting Features, api url: ${url}`);
+    fetch(url, options)
+    .then(response => response.json())
+    .then(response => {
+        console.log(response); 
+
+        var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
+        SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
+
+        if(!response || !response.data || response.data.length == 0){
+            var SomethingWentWrong = document.createElement('p');
+            SomethingWentWrong.innerHTML = "Something went wrong";
+
+            if(!response && response.errors){
+                SomethingWentWrong.innerHTML = response.errors[0];
+            }
+
+            SearchSubtitlesResultsContainer.appendChild(SomethingWentWrong);
+            return;
+        }
+
+        //Add movies to list
+        for (let i = 0; i < response.data.length; i++) {
+            //if(response.data[i].attributes.feature_type === "Episode") continue;
+            //if(!response.data[i].attributes.subtitles_counts[LanguageSelect.value]) continue;
+            var _subtitleResultListItem = SubtitleResultListItem.cloneNode(true);
+            SearchSubtitlesResultsContainer.appendChild(_subtitleResultListItem);
+
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Title").innerHTML = response.data[i].attributes.title;
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_FullName").innerHTML = "()";
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Downloads").innerHTML = response.data[i].attributes.subtitles_counts[LanguageSelect.value];
+            //_subtitleResultListItem.querySelector(".SubtitleResultListItem_TrustedUserIcon").style = response.data[i].attributes.from_trusted===true ? "" : "filter: opacity(0.15);";
+            //_subtitleResultListItem.querySelector(".SubtitleResultListItem_AITranslatedIcon").style = response.data[i].attributes.ai_translated===true? "" : "filter: opacity(0.15);";
+
+            _subtitleResultListItem.addEventListener("click", function() {
+                console.log(`Clicked [${i}] movie: ${response.data[i].attributes.title}`); 
+            });
+            SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
+        }
+    }).catch(err => console.error(err));
+
+    
+}
+*/
 
 function ImportSubtitle(){
     var SubtitleFile = ImportSubtitlesButton.files[0];
@@ -228,12 +285,9 @@ function ImportSubtitle(){
     reader.readAsText(SubtitleFile);
 }
 
-function DownloadSubtitle(){
-    //TODO smart caching stuff
-}
-
 //srt file contents as string
 function ParseSubtitle(allSubtitles){
+    console.log("Parsing Subtitle");
     SubtitlesData = [];
     var lines = allSubtitles.split(/\r?\n/);
     var i = 0;
@@ -381,4 +435,78 @@ function BinarySearchSubtitles(t, start, end){
     }
   
     return {found:false, index: mid};
+}
+
+function GetSubtitle(subtitleData){
+    if(!subtitleData || !subtitleData.id) return;
+    if(subtitleData.id === -1) return; //used when imported file
+    const g = `${subtitleData.id}`;
+    chrome.storage.local.get(g).then(
+        (result) => {
+            if(result && result[subtitleData.id] && result[subtitleData.id].subtitles && result[subtitleData.id].subtitles.length > 0){
+                console.log(`Loaded Subtitle from cache, id: ${subtitleData.id}`);
+                console.log(result[subtitleData.id]);
+                SubtitlesData = result[subtitleData.id].subtitles;
+                AddSubtitles();
+                UpdateSubtitles();
+                SetOverlayState("Subtitles");
+            }else{
+                console.log(`Failed to load Subtitle from cache, id: ${subtitleData.id}`);
+                DownloadRequestSubtitle(subtitleData);
+            }
+        }
+    );
+}
+
+function DownloadRequestSubtitle(subtitleData){
+    console.log(`Download Request subtitle id: ${subtitleData.id}, file id: ${subtitleData.attributes.files[0].file_id}`);
+
+    const url = 'https://api.opensubtitles.com/api/v1/download';
+    const options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Api-Key': ApiKey
+        },
+        body: '{"file_id":'+ subtitleData.attributes.files[0].file_id + ',"sub_format":"srt"}'
+    };
+    
+    console.log(`Download Request, api url: ${url}`);
+    fetch(url, options)
+    .then(response => response.json())
+    .then(response => {
+        console.log(response); 
+        console.log("Download Request Succesful, remaining requests:" +response.remaining); 
+
+        DownloadSubtitle(subtitleData,response.link);
+        
+        
+    }).catch(err => console.error(err));
+
+}
+function DownloadSubtitle(subtitleData, downloadUrl){
+    console.log(`Downloading ${downloadUrl}`);
+
+    const options = {method: 'GET'};
+
+    fetch(downloadUrl, options)
+    .then(response => response.text())
+    .then(response => {
+        console.log("Download Succesful"); 
+        //console.log(response);
+        ParseSubtitle(response);
+        CacheSubtitle(subtitleData);        
+    }).catch(err => console.error(err));
+}
+
+function CacheSubtitle(subtitleData){    
+    if(!subtitleData || !subtitleData.id) return;
+    if(subtitleData.id === -1) return; //used when imported file
+
+    const keyvalue = {};
+    keyvalue[subtitleData.id] = {title : subtitleData.attributes.feature_details.title , subtitles : SubtitlesData };
+    
+    chrome.storage.local.set(keyvalue).then(() => {
+        console.log(`Cached subtitles with id: ${subtitleData.id}`);
+    });
 }
