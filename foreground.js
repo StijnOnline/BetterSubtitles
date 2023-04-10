@@ -12,6 +12,7 @@ var ForeignPartsOnly;
 var SeasonNumber;
 var EpisodeNumber;
 var ImportSubtitlesButton;
+var SubtitleResultListItem;
 var SubtitlesHTML;
 
 var SubtitlesData = [];//array of subtitles: {startTime,endTime,subtitle}[]
@@ -49,6 +50,8 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         EpisodeNumber = VideoOverlayHTML.querySelector("#EpisodeNumber");
         ImportSubtitlesButton = VideoOverlayHTML.querySelector("#ImportSubtitles");
         SubtitlesHTML = VideoOverlayHTML.querySelector("#Subtitles");
+        SubtitleResultListItem = VideoOverlayHTML.querySelector(".SubtitleResultListItem");
+        VideoOverlayHTML.querySelector("#SearchSubtitlesResultsContainer").removeChild(SubtitleResultListItem);
         HearingImpaired.addEventListener("click", function() {
             if(HearingImpaired.checked) ForeignPartsOnly.checked = false;
         });
@@ -194,20 +197,19 @@ function SearchSubtitles(searchQuery) {
 
         //Add movies to list
         for (let i = 0; i < response.data.length; i++) {
-            var subtitleResultListItem = document.createElement('button');
-            subtitleResultListItem.className  = "SubtitleResultListItem";
-            subtitleResultListItem.innerHTML = response.data[i].attributes.feature_details.movie_name;
-            SearchSubtitlesResultsContainer.appendChild(subtitleResultListItem);
-            subtitleResultListItem.addEventListener("click", function() {
-                console.log(`Clicked [${i}] movie: ${response.data[i].attributes.feature_details.movie_name}`); 
+            var _subtitleResultListItem = SubtitleResultListItem.cloneNode(true);
+            SearchSubtitlesResultsContainer.appendChild(_subtitleResultListItem);
+
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Title").innerHTML = response.data[i].attributes.feature_details.title;
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_FullName").innerHTML = "(" + response.data[i].attributes.release + ")";
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Downloads").innerHTML = response.data[i].attributes.download_count;
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_TrustedUserIcon").style = response.data[i].attributes.from_trusted===true ? "" : "filter: opacity(0.15);";
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_AITranslatedIcon").style = response.data[i].attributes.ai_translated===true? "" : "filter: opacity(0.15);";
+
+            _subtitleResultListItem.addEventListener("click", function() {
+                console.log(`Clicked [${i}] movie: ${response.data[i].attributes.feature_details.title}`); 
             });
             SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
-        }
-
-        var movieName = response.data[0].attributes.feature_details.movie_name;
-        console.log(`First result movie: ${movieName}`); 
-        if(SubTitleHTML){
-            SubTitleHTML.innerHTML = movieName;
         }
     }).catch(err => console.error(err));
 
