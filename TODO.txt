@@ -1,6 +1,11 @@
 DetectvideoPlayer: better videoPlayer name (get title)
-search result: better subtitle name
-Code different sites?
-Subtitles html
-Download subtitles > cache file
+auto insert title into search
+
 Language options
+Basic Sync
+Advanced Sync
+
+Better search, how to use feature query with subtitle query smart
+
+{\an8} tag should mean on top?
+Settings page?

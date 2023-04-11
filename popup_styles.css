@@ -69,3 +69,25 @@ body{
 #DetectVideoPlayers:hover{
     background: aliceblue;
 }
+
+#SyncSubtitles{
+    margin: 0 10px;
+    padding: 0 10px 0 5px;
+
+    display: flex;
+    align-items: center;
+    height: 30px;
+
+    text-align: left;
+
+    border: 1px solid #999;
+    border-radius: 8px;
+}
+#SyncSubtitles img{    
+    height: 100%;
+    margin-right: 10px;
+}
+#SyncSubtitles:hover{
+    background: #ccc;
+    cursor: pointer;
+}

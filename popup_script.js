@@ -1,6 +1,7 @@
 //POPUP OPENED
 RequestInject();
 document.querySelector("#DetectVideoPlayers").addEventListener("click", RequestInject );
+document.querySelector("#SyncSubtitles").addEventListener("click", async ()=>{SendMessageActiveTab({message:"SyncSubtitles"});} );
 
 
 //Ask for inject (if not already)

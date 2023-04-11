@@ -15,6 +15,9 @@ var ImportSubtitlesButton;
 var SubtitleResultListItem;
 var SubtitlesHTML;
 
+var SyncSubtitles_TimeLine;
+var SyncSubtitles_Subs;
+
 var SubtitlesData = [];//array of subtitles: {startTime,endTime,subtitle}[]
 var CurrentSubtitleIndex = 0;
 var LastVideoTimestamp = 0;
@@ -52,7 +55,11 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         ImportSubtitlesButton = VideoOverlayHTML.querySelector("#ImportSubtitles");
         SubtitlesHTML = VideoOverlayHTML.querySelector("#Subtitles");
         SubtitleResultListItem = VideoOverlayHTML.querySelector(".SubtitleResultListItem");
+        SyncSubtitles_TimeLine = VideoOverlayHTML.querySelector("#SyncSubtitles_TimeLine");
+        SyncSubtitles_Subs = VideoOverlayHTML.querySelector("#SyncSubtitles_Subs");
         VideoOverlayHTML.querySelector("#SearchSubtitlesResultsContainer").removeChild(SubtitleResultListItem);
+
+
         HearingImpaired.addEventListener("click", function() {
             if(HearingImpaired.checked) ForeignPartsOnly.checked = false;
         });
@@ -63,6 +70,36 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
             console.log("Import Changed");
             ImportSubtitle();
         });
+
+
+
+
+
+        const slider = VideoOverlayHTML.querySelector('#SyncSubtitles_Timeline');
+        let mouseDown = false;
+        let startY, scrollTop;
+
+        let startDragging = function (e) {
+            mouseDown = true;
+            startY = e.pageY - slider.offsetTop;
+            scrollTop = slider.scrollTop;
+        };
+        let stopDragging = function (event) {
+            mouseDown = false;
+        };
+
+        slider.addEventListener('mousemove', (e) => {
+            e.preventDefault();
+            if(!mouseDown) { return; }
+            const y = e.pageY - slider.offsetTop;
+            const scroll = y - startY;
+            slider.scrollTop = scrollTop - scroll;
+        });
+
+        // Add the event listeners
+        slider.addEventListener('mousedown', startDragging, false);
+        slider.addEventListener('mouseup', stopDragging, false);
+        slider.addEventListener('mouseleave', stopDragging, false);
     });
 
 
@@ -88,6 +125,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }else if (request.message === 'SelectVideoPlayer') {
         SelectVideoPlayer(request.index);
+        sendResponse();
+        return true;
+    }else if (request.message === 'SyncSubtitles') {
+        SetOverlayState("SyncSubtitles");
         sendResponse();
         return true;
     }
@@ -137,6 +178,7 @@ function SetOverlayState(state) {
     //TODO not query but cache?
     VideoOverlayHTML.querySelector('#VideoHighlight').hidden = (state !== 'Highlight');
     VideoOverlayHTML.querySelector('#SearchSubtitlesOverlay').hidden = (state !== 'SearchSubtitles');
+    VideoOverlayHTML.querySelector('#SyncSubtitles').hidden = (state !== 'SyncSubtitles');
     SubtitlesHTML.hidden = (state !== 'Subtitles');
     if(SelectedVideo) {
         SelectedVideo.removeEventListener("timeupdate",UpdateSubtitles);
@@ -509,4 +551,23 @@ function CacheSubtitle(subtitleData){
     chrome.storage.local.set(keyvalue).then(() => {
         console.log(`Cached subtitles with id: ${subtitleData.id}`);
     });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function UpdateSyncMode(){    
+    
 }
