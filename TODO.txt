@@ -1,9 +1,16 @@
+TODO:
+
+icon in hotbar with:
+    - reselect subtitle file
+    - resync audio
+    - micro adjust audio sync
+
+explanation in audio sync menu
+
 DetectvideoPlayer: better videoPlayer name (get title)
 auto insert title into search
 
 Language options
-Basic Sync
-Advanced Sync
 
 Better search, how to use feature query with subtitle query smart
 

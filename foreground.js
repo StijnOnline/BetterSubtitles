@@ -1,9 +1,13 @@
+
+
+var ApiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
+
+
 var VideoPlayers = [];
 var SelectedVideo;
 var SubTitleHTML;
 var LastState = "None";
 var CurrentState;
-var ApiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
 
 //Search input nodes
 var LanguageSelect;
@@ -15,10 +19,16 @@ var ImportSubtitlesButton;
 var SubtitleResultListItem;
 var SubtitlesHTML;
 
+var SyncSubtitles;
 var SyncSubtitles_TimeLine;
+var SyncSubtitles_ScrollView;
 var SyncSubtitles_Subs;
+var SyncSubtitles_Item;
+var SyncSubtitles_ArrowMarker;
+var SyncSubtitles_TimeToPixelRatio = 25;
+var SubtitlesSync_TimeOffset = 0;
 
-var SubtitlesData = [];//array of subtitles: {startTime,endTime,subtitle}[]
+var SubtitlesData = [];//array of subtitles: {startTime,endTime,content}[]
 var CurrentSubtitleIndex = 0;
 var LastVideoTimestamp = 0;
 
@@ -55,9 +65,14 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         ImportSubtitlesButton = VideoOverlayHTML.querySelector("#ImportSubtitles");
         SubtitlesHTML = VideoOverlayHTML.querySelector("#Subtitles");
         SubtitleResultListItem = VideoOverlayHTML.querySelector(".SubtitleResultListItem");
+        VideoOverlayHTML.querySelector("#SearchSubtitlesResultsContainer").removeChild(SubtitleResultListItem);
+
+        SyncSubtitles = VideoOverlayHTML.querySelector("#SyncSubtitles");
         SyncSubtitles_TimeLine = VideoOverlayHTML.querySelector("#SyncSubtitles_TimeLine");
         SyncSubtitles_Subs = VideoOverlayHTML.querySelector("#SyncSubtitles_Subs");
-        VideoOverlayHTML.querySelector("#SearchSubtitlesResultsContainer").removeChild(SubtitleResultListItem);
+        SyncSubtitles_Item = VideoOverlayHTML.querySelector(".SyncSubtitles_SubtitleItem");
+        SyncSubtitles_Subs.removeChild(SyncSubtitles_Item);//remove template item
+        SyncSubtitles_ArrowMarker = VideoOverlayHTML.querySelector("#SyncSubtitles_TimeMarkerArrow");
 
 
         HearingImpaired.addEventListener("click", function() {
@@ -74,32 +89,51 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
 
 
 
-
-        const slider = VideoOverlayHTML.querySelector('#SyncSubtitles_Timeline');
+        
+        SyncSubtitles_ScrollView = VideoOverlayHTML.querySelector('#SyncSubtitles_Subs');
         let mouseDown = false;
-        let startY, scrollTop;
+        let startY=0, scrollTop=0, totalScroll=0;
 
         let startDragging = function (e) {
             mouseDown = true;
-            startY = e.pageY - slider.offsetTop;
-            scrollTop = slider.scrollTop;
+            startY = e.pageY - SyncSubtitles_ScrollView.offsetTop;
+            scrollTop = SyncSubtitles_ScrollView.scrollTop;
         };
         let stopDragging = function (event) {
+            if(mouseDown) {
+                SubtitlesSync_TimeOffset += -totalScroll / SyncSubtitles_TimeToPixelRatio;
+                console.log(`Adjusting Sync by ${-totalScroll / SyncSubtitles_TimeToPixelRatio}, now ${SubtitlesSync_TimeOffset}`); 
+            }
             mouseDown = false;
+            totalScroll=0;
         };
 
-        slider.addEventListener('mousemove', (e) => {
+        SyncSubtitles_ScrollView.addEventListener('mousemove', (e) => {
             e.preventDefault();
             if(!mouseDown) { return; }
-            const y = e.pageY - slider.offsetTop;
+            const y = e.pageY - SyncSubtitles_ScrollView.offsetTop;
             const scroll = y - startY;
-            slider.scrollTop = scrollTop - scroll;
+            totalScroll = scroll;
+            SyncSubtitles_ScrollView.scrollTop = scrollTop - scroll;
         });
 
         // Add the event listeners
-        slider.addEventListener('mousedown', startDragging, false);
-        slider.addEventListener('mouseup', stopDragging, false);
-        slider.addEventListener('mouseleave', stopDragging, false);
+        SyncSubtitles_ScrollView.addEventListener('mousedown', startDragging, false);
+        SyncSubtitles_ScrollView.addEventListener('mouseup', stopDragging, false);
+        SyncSubtitles_ScrollView.addEventListener('mouseleave', stopDragging, false);
+        SyncSubtitles_ScrollView.addEventListener('mousewheel', MouseWheelHandler, false);
+
+        //Disable Normal scroll
+        function MouseWheelHandler(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
+        
+        VideoOverlayHTML.querySelector("#SyncSubtitles_DoneButton").addEventListener("click", function() {
+            SetOverlayState("Subtitles");
+        });
     });
 
 
@@ -182,8 +216,15 @@ function SetOverlayState(state) {
     SubtitlesHTML.hidden = (state !== 'Subtitles');
     if(SelectedVideo) {
         SelectedVideo.removeEventListener("timeupdate",UpdateSubtitles);
+        SelectedVideo.removeEventListener("timeupdate",UpdateSyncMode);
         if(state === 'Subtitles'){
-            SelectedVideo.addEventListener("timeupdate",UpdateSubtitles);}
+            SelectedVideo.addEventListener("timeupdate",UpdateSubtitles);
+        }if(state === 'SyncSubtitles'){
+            SelectedVideo.addEventListener("timeupdate",UpdateSyncMode);
+        }
+    };
+    if(state === 'SyncSubtitles') {
+        InitSyncMode();
     };
 
     CurrentState = state;
@@ -362,7 +403,7 @@ function ParseSubtitle(allSubtitles){
     console.log(SubtitlesData);
     AddSubtitles();
     UpdateSubtitles();
-    SetOverlayState("Subtitles");
+    SetOverlayState("SyncSubtitles");
 }
 
 function ParseTimeStamp(t){
@@ -394,7 +435,7 @@ function RemoveSubtitles() {
 function UpdateSubtitles() {
     if(!SelectedVideo){return;}
     var sub = null;
-    var t = SelectedVideo.currentTime;
+    var t = SelectedVideo.currentTime + SubtitlesSync_TimeOffset;
 
     //if new time is less than 2min later than last sub, just search forward
     if(t > LastVideoTimestamp && (t - LastVideoTimestamp) < 120){ 
@@ -434,8 +475,8 @@ function UpdateSubtitles() {
         }else {
             result = BinarySearchSubtitles(t,0,SubtitlesData.length-1);
         }
-        console.log(`Binary search ${t} result:`);
-        console.log(result);
+        //console.log(`Binary search ${t} result:`);
+        //console.log(result);
         if(result){
             if(result.found){
                 sub = SubtitlesData[subIndex];
@@ -568,6 +609,65 @@ function CacheSubtitle(subtitleData){
 
 
 
-function UpdateSyncMode(){    
+function InitSyncMode(){    
+    //Populate Subs in timeline view
+    SyncSubtitles_Subs.innerHTML = '';//remove all content
+    if(!SubtitlesData || SubtitlesData.length == 0){
+        var SomethingWentWrong = document.createElement('p');
+        SomethingWentWrong.innerHTML = "Something went wrong";
+
+        SyncSubtitles_Subs.appendChild(SomethingWentWrong);
+        return;
+    }
+
+
+    //Add Start element
+    {
+        var _SubtitleItem = SyncSubtitles_Item.cloneNode(true);
+        _SubtitleItem.querySelector(".SyncSubtitles_SubtitleText").innerText = "<<Start>>";
+        var endPos = SelectedVideo.duration * SyncSubtitles_TimeToPixelRatio;
+        _SubtitleItem.style = `top: 0px; height: 0; padding-top: 50px; background-color: transparent;`;       
+        SyncSubtitles_Subs.appendChild(_SubtitleItem);        
+    }
+    var arrowPos = SyncSubtitles_ArrowMarker.getBoundingClientRect();
+    for (let i = 0; i < SubtitlesData.length; i++) {
+        var _SubtitleItem = SyncSubtitles_Item.cloneNode(true);
+        
+        _SubtitleItem.querySelector(".SyncSubtitles_SubtitleText").innerHTML = SubtitlesData[i].content;
+
+        var pos = SyncSubtitles_TimeToPixelRatio * SubtitlesData[i].startTime;
+        //account for arrow marker as 0point 
+        pos += arrowPos.y + arrowPos.height / 2;
+
+        _SubtitleItem.style = `top:${pos}px; height:${SyncSubtitles_TimeToPixelRatio * (SubtitlesData[i].endTime - SubtitlesData[i].startTime)}px;`;
+        
+        SyncSubtitles_Subs.appendChild(_SubtitleItem);
+    }
+
+    //Add End element
+    {
+        var _SubtitleItem = SyncSubtitles_Item.cloneNode(true);
+        _SubtitleItem.querySelector(".SyncSubtitles_SubtitleText").innerText  = "<<END>>";
+        var endPos = SelectedVideo.duration * SyncSubtitles_TimeToPixelRatio;
+        _SubtitleItem.style = `top: ${endPos}px; height: 0; padding-bottom: 50px; background-color: transparent;`;       
+        SyncSubtitles_Subs.appendChild(_SubtitleItem);        
+    }
+
+    
+    var t = SelectedVideo.currentTime;
+    SyncSubtitles.querySelector("#SyncSubtitles_TimeText").innerHTML = new Date(t * 1000).toISOString().slice(11, 23);
+
+    
+
+    UpdateSyncMode();
+}
+
+function UpdateSyncMode(){   
+    var t = SelectedVideo.currentTime;
+    SyncSubtitles.querySelector("#SyncSubtitles_TimeText").innerHTML = new Date(t * 1000).toISOString().slice(11, 23);
+    
+    
+    var ypos = (t + SubtitlesSync_TimeOffset) * SyncSubtitles_TimeToPixelRatio;
+    SyncSubtitles_ScrollView.scrollTop = ypos;
     
 }

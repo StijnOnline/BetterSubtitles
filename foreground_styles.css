@@ -227,14 +227,13 @@
 
 #SyncSubtitles {
     position: absolute;
-    background-color: #232323b8;
+    background-color: #1a1a1ac5;
     width: 100%;
     height: 85%;
     z-index: 10000;
 }
 #SyncSubtitles_Timeline{
     height: 100%;
-    overflow-y: scroll;
 
     --mask: linear-gradient(
         to bottom, 
@@ -242,21 +241,22 @@
         rgba(0,0,0, 1) 5%, 
         rgba(0,0,0, 1) 90%,  
         rgb(0 0 0 / 0) 99% ) 
-        100% 80% / 100% 100% repeat-x
+        100% 80% / 100% 100% repeat-x;
 
     -webkit-mask: var(--mask); 
     mask: var(--mask);
 }
-#SyncSubtitles_Timeline::-webkit-scrollbar{
+#SyncSubtitles_Subs::-webkit-scrollbar{
     display: none;
 }
 #SyncSubtitles_Subs{
-    position: relative;
-    left: 35%;
-    height: auto;    
+    position: absolute;
+    left: 35%; 
     width: 65%;
-    margin-top: 100%;
-    margin-bottom: 100%;
+    height: 100%;
+
+    overflow-y: auto;
+    margin: 0;
 }
 
 #SyncSubtitles_TimeLineLine {
@@ -270,7 +270,7 @@
     margin-left: 10px;
 }
 .SyncSubtitles_SubtitleItem {
-    position: relative;
+    position: absolute;
 
     display: flex;
     align-items: center;
@@ -282,21 +282,21 @@
 .SyncSubtitles_SubtitleText {
     display: flex;
     align-items: center;
-    font-size: 28px;
+    font-size: 20px;
     margin: 15px 30px 15px 30px;
 }
 .SyncSubtitles_StartMarker {
     background-color: white;
-    height: 3px;
-    width: 40px;
+    height: 1px;
+    width: 20px;
     position: absolute;
     left: -15px;
     top: 0;
 }
 .SyncSubtitles_EndMarker {
     background-color: white;
-    height: 3px;
-    width: 40px;
+    height: 1px;
+    width: 20px;
     position: absolute;
     left: -15px;
     bottom: 0;
@@ -306,8 +306,9 @@
 #SyncSubtitles_TimeMarker {    
     position: absolute;
     right: 65%;
-    top: 45%;
+    top: 450px;
     padding-right: 50px;
+    height: 0;
 
     display: flex;
     align-items: center;
@@ -323,7 +324,26 @@
 #SyncSubtitles_TimeText {
     font-size: 40px;
 }
-  
+#SyncSubtitles_DoneButton {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    font-size: 30px;
+    border: solid 2px white;
+    padding: 5px;
+    padding-right: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+#SyncSubtitles_DoneButton img{
+    filter: invert(1);
+    height: 40px;
+    margin-right: 10px;
+}
+
+
 
 
 
