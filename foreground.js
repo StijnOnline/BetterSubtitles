@@ -134,6 +134,8 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         VideoOverlayHTML.querySelector("#SyncSubtitles_DoneButton").addEventListener("click", function() {
             SetOverlayState("Subtitles");
         });
+        
+        AddLanguageOptions(VideoOverlayHTML.querySelector("#LanguageSelect"));
     });
 
 
@@ -232,7 +234,7 @@ function SetOverlayState(state) {
 
 
 function SearchSubtitles(searchQuery) {
-    var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+');
+    var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+').toLowerCase();;
     console.log(`Searching Subtitles: `+ searchQuery);
     
 
@@ -263,10 +265,6 @@ function SearchSubtitles(searchQuery) {
     .then(response => response.json())
     .then(response => {
         console.log(response); 
-
-        var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
-        SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
-
         if(!response || !response.data || response.data.length == 0){
             var SomethingWentWrong = document.createElement('p');
             SomethingWentWrong.innerHTML = "Something went wrong";
@@ -299,11 +297,14 @@ function SearchSubtitles(searchQuery) {
     }).catch(err => console.error(err));
 
     
+    var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
+    SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
 }
 
 /*
 function SearchFeatures(searchQuery) {
-    var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+');
+    var input = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value;
+    var searchQuery = input.replaceAll(' ','+').toLowerCase();
     console.log(`Searching Features: `+ searchQuery);
     
 
@@ -316,9 +317,6 @@ function SearchFeatures(searchQuery) {
     .then(response => response.json())
     .then(response => {
         console.log(response); 
-
-        var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
-        SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
 
         if(!response || !response.data || response.data.length == 0){
             var SomethingWentWrong = document.createElement('p');
@@ -352,9 +350,9 @@ function SearchFeatures(searchQuery) {
         }
     }).catch(err => console.error(err));
 
-    
+    var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
+    SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
 }
-*/
 
 function ImportSubtitle(){
     var SubtitleFile = ImportSubtitlesButton.files[0];
@@ -670,4 +668,28 @@ function UpdateSyncMode(){
     var ypos = (t + SubtitlesSync_TimeOffset) * SyncSubtitles_TimeToPixelRatio;
     SyncSubtitles_ScrollView.scrollTop = ypos;
     
+
+function AddLanguageOptions(element){
+
+    fetch(chrome.runtime.getURL("Data/LanguageOptions.html"))
+    .then(response=> response.text())
+    .then(response=> {
+        var options = response
+        
+        options = '<option value="en">English</option>' + '<option disabled>--------</option>' + options;
+        element.innerHTML = options;
+        
+        //detect language and add to quick options
+        var userLanguage = window.navigator.language;
+        //other api: 
+        //chrome.i18n.getAcceptLanguages()
+        //chrome.i18n.getUILanguage()
+        if(userLanguage != 'en'){
+            console.log("detected language: " + userLanguage);
+            var quickAccess = element.querySelector('option[value="' + userLanguage  +'"]');
+            if(quickAccess) element.prepend(quickAccess.cloneNode(true));
+        }
+        
+        
+    });
 }
