@@ -66,6 +66,10 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         SubtitlesHTML = VideoOverlayHTML.querySelector("#Subtitles");
         SubtitleResultListItem = VideoOverlayHTML.querySelector(".SubtitleResultListItem");
         VideoOverlayHTML.querySelector("#SearchSubtitlesResultsContainer").removeChild(SubtitleResultListItem);
+        AddLanguageOptions(VideoOverlayHTML.querySelector("#LanguageSelect"));
+        LanguageSelect.addEventListener("change",SaveSearchOptions);
+        HearingImpaired.addEventListener("change",SaveSearchOptions);
+        ForeignPartsOnly.addEventListener("change",SaveSearchOptions);
 
         SyncSubtitles = VideoOverlayHTML.querySelector("#SyncSubtitles");
         SyncSubtitles_TimeLine = VideoOverlayHTML.querySelector("#SyncSubtitles_TimeLine");
@@ -135,7 +139,6 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
             SetOverlayState("Subtitles");
         });
         
-        AddLanguageOptions(VideoOverlayHTML.querySelector("#LanguageSelect"));
     });
 
 
@@ -690,6 +693,40 @@ function AddLanguageOptions(element){
             if(quickAccess) element.prepend(quickAccess.cloneNode(true));
         }
         
-        
+        LoadSearchOptions();        
     });
+}
+
+function SaveSearchOptions(){
+    console.log("Saving Search Options");
+    const keyvalue = {};
+    keyvalue['SearchOptions'] = {Language : LanguageSelect.value , foreign_parts_only : ForeignPartsOnly.checked, hearing_impaired : HearingImpaired.checked, };
+    
+    chrome.storage.local.set(keyvalue);
+}
+
+function LoadSearchOptions(){
+    chrome.storage.local.get('SearchOptions').then(
+        (result) => {
+            if(result && result.SearchOptions){
+                if(result.SearchOptions.Language){
+                    LanguageSelect.value = result.SearchOptions.Language;
+                }
+                if(result.SearchOptions.foreign_parts_only){
+                    ForeignPartsOnly.checked = result.SearchOptions.foreign_parts_only;
+                }
+                if(result.SearchOptions.hearing_impaired){
+                    HearingImpaired.checked = result.SearchOptions.hearing_impaired;                    
+                }
+            }
+        }
+    );
+}
+
+function PrintLocalStorage(){
+    chrome.storage.local.get(null).then(
+        (result) => {
+            console.log(result);
+        }
+    );
 }
