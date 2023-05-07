@@ -1,4 +1,4 @@
-
+console.log("BetterSubtitles Foreground Script Loaded");
 
 var ApiKey = "FSyoIs4NDWMD65l1eIoL6llyiOwdVv2d";
 
@@ -10,6 +10,8 @@ var LastState = "None";
 var CurrentState;
 
 //Search input nodes
+var IsSeriesToggle;
+var SearchSubtitlesInput;
 var LanguageSelect;
 var HearingImpaired;
 var ForeignPartsOnly;
@@ -52,11 +54,36 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
 
 
         //Search Tab
+        SearchSubtitlesInput = VideoOverlayHTML.querySelector("#SearchSubtitlesInput");
+        SearchSubtitlesInput.addEventListener("keydown",function(e){
+            //if(e.keyCode == 13) SearchFeatures();
+            autocompletedFeatureID=null;
+        });
+        CreateAutocomplete(SearchSubtitlesInput,GetAutocompleteOptions);
+        
         var SearchSubtitlesButton = VideoOverlayHTML.querySelector("#SearchSubtitlesButton");
         SearchSubtitlesButton.addEventListener("click", function() {
             SearchSubtitles();
             //SearchFeatures();
         });
+        var SubtitleTypeSelect = VideoOverlayHTML.querySelector("#SubtitleTypeButton");
+        IsSeriesToggle = VideoOverlayHTML.querySelector("#SubtitleTypeButton input");
+        SubtitleTypeSelect.addEventListener("click", function() {
+            IsSeriesToggle.checked = !IsSeriesToggle.checked;
+            SubtitleTypeSelect.querySelector("#MovieIcon").hidden = IsSeriesToggle.checked;
+            SubtitleTypeSelect.querySelector("#SeriesIcon").hidden = !IsSeriesToggle.checked;
+            if(IsSeriesToggle.checked){
+                SubtitleTypeSelect.querySelector("#SubtitleTypeText").innerHTML = "Series";
+            }else{
+                SubtitleTypeSelect.querySelector("#SubtitleTypeText").innerHTML = "Movie";
+            }
+
+            VideoOverlayHTML.querySelector("#SeriesOptions").hidden = !IsSeriesToggle.checked;
+            GetAutocompleteOptions();
+        });
+        SubtitleTypeSelect.click();
+        SubtitleTypeSelect.click();
+
         LanguageSelect = VideoOverlayHTML.querySelector("#LanguageSelect");
         HearingImpaired = VideoOverlayHTML.querySelector("#HearingImpaired");
         ForeignPartsOnly = VideoOverlayHTML.querySelector("#ForeignPartsOnly");
@@ -237,7 +264,9 @@ function SetOverlayState(state) {
 
 
 function SearchSubtitles(searchQuery) {
-    var searchQuery = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value.replaceAll(' ','+').toLowerCase();;
+    var input = SearchSubtitlesInput.value;
+    if(!input)return;
+    var searchQuery = input.replaceAll(' ','+').toLowerCase();;
     console.log(`Searching Subtitles: `+ searchQuery);
     
 
@@ -254,12 +283,15 @@ function SearchSubtitles(searchQuery) {
     */
 
     const urlParams = new URLSearchParams();
-    if(EpisodeNumber.value) {urlParams.append("episode_number",EpisodeNumber.value)}
+    if(IsSeriesToggle.checked && EpisodeNumber.value) {urlParams.append("episode_number",EpisodeNumber.value)}
     if(ForeignPartsOnly.checked) {urlParams.append("foreign_parts_only","only")} else {urlParams.append("foreign_parts_only","exclude")}
     if(HearingImpaired.checked) {urlParams.append("hearing_impaired","only")} else {urlParams.append("hearing_impaired","exclude")}
+    if(autocompletedFeatureID && !IsSeriesToggle.checked) urlParams.append("id",autocompletedFeatureID);
     urlParams.append("languages",LanguageSelect.value);
+    if(autocompletedFeatureID && IsSeriesToggle.checked) urlParams.append("parent_feature_id",autocompletedFeatureID);
     urlParams.append("query",searchQuery);
-    if(SeasonNumber.value) {urlParams.append("season_number",SeasonNumber.value)}
+    if(IsSeriesToggle.checked && SeasonNumber.value) {urlParams.append("season_number",SeasonNumber.value)}
+    urlParams.append("type",(IsSeriesToggle.checked ? "episode" : "movie"));
 
     const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': ApiKey}, mode: 'cors',};
     const url = `https://api.opensubtitles.com/api/v1/subtitles?${urlParams.toString()}`;
@@ -268,9 +300,11 @@ function SearchSubtitles(searchQuery) {
     .then(response => response.json())
     .then(response => {
         console.log(response); 
-        if(!response || !response.data || response.data.length == 0){
+        if(!response || !response.data){
             var SomethingWentWrong = document.createElement('p');
             SomethingWentWrong.innerHTML = "Something went wrong";
+            if(response.data.length == 0)
+            SomethingWentWrong.innerHTML = "No Results";
 
             if(!response && response.errors){
                 SomethingWentWrong.innerHTML = response.errors[0];
@@ -280,6 +314,7 @@ function SearchSubtitles(searchQuery) {
             return;
         }
 
+        SubtitlesResults = [];
         //Add movies to list
         for (let i = 0; i < response.data.length; i++) {
             var _subtitleResultListItem = SubtitleResultListItem.cloneNode(true);
@@ -304,58 +339,6 @@ function SearchSubtitles(searchQuery) {
     SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
 }
 
-/*
-function SearchFeatures(searchQuery) {
-    var input = VideoOverlayHTML.querySelector("#SearchSubtitlesInput").value;
-    var searchQuery = input.replaceAll(' ','+').toLowerCase();
-    console.log(`Searching Features: `+ searchQuery);
-    
-
-
-    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': ApiKey}, mode: 'cors',};
-    const url = `https://api.opensubtitles.com/api/v1/features?query=${searchQuery}`;
-
-    console.log(`Getting Features, api url: ${url}`);
-    fetch(url, options)
-    .then(response => response.json())
-    .then(response => {
-        console.log(response); 
-
-        if(!response || !response.data || response.data.length == 0){
-            var SomethingWentWrong = document.createElement('p');
-            SomethingWentWrong.innerHTML = "Something went wrong";
-
-            if(!response && response.errors){
-                SomethingWentWrong.innerHTML = response.errors[0];
-            }
-
-            SearchSubtitlesResultsContainer.appendChild(SomethingWentWrong);
-            return;
-        }
-
-        //Add movies to list
-        for (let i = 0; i < response.data.length; i++) {
-            //if(response.data[i].attributes.feature_type === "Episode") continue;
-            //if(!response.data[i].attributes.subtitles_counts[LanguageSelect.value]) continue;
-            var _subtitleResultListItem = SubtitleResultListItem.cloneNode(true);
-            SearchSubtitlesResultsContainer.appendChild(_subtitleResultListItem);
-
-            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Title").innerHTML = response.data[i].attributes.title;
-            _subtitleResultListItem.querySelector(".SubtitleResultListItem_FullName").innerHTML = "()";
-            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Downloads").innerHTML = response.data[i].attributes.subtitles_counts[LanguageSelect.value];
-            //_subtitleResultListItem.querySelector(".SubtitleResultListItem_TrustedUserIcon").style = response.data[i].attributes.from_trusted===true ? "" : "filter: opacity(0.15);";
-            //_subtitleResultListItem.querySelector(".SubtitleResultListItem_AITranslatedIcon").style = response.data[i].attributes.ai_translated===true? "" : "filter: opacity(0.15);";
-
-            _subtitleResultListItem.addEventListener("click", function() {
-                console.log(`Clicked [${i}] movie: ${response.data[i].attributes.title}`); 
-            });
-            SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
-        }
-    }).catch(err => console.error(err));
-
-    var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
-    SearchSubtitlesResultsContainer.innerHTML = '';//remove all content
-}
 
 function ImportSubtitle(){
     var SubtitleFile = ImportSubtitlesButton.files[0];
@@ -407,13 +390,7 @@ function ParseSubtitle(allSubtitles){
     SetOverlayState("SyncSubtitles");
 }
 
-function ParseTimeStamp(t){
-    //Format = 00:02:04,743 to seconds as number
-    return Number(t.split(':')[0]) * 60 * 60 + //hours
-            Number(t.split(':')[1]) * 60 + //minutes
-            Number(t.split(':')[2].split(',')[0]) + //seconds
-            Number(t.split(',')[1]) * 0.001; //miliseconds
-}
+
 
 
 function AddSubtitles() {
@@ -671,6 +648,18 @@ function UpdateSyncMode(){
     var ypos = (t + SubtitlesSync_TimeOffset) * SyncSubtitles_TimeToPixelRatio;
     SyncSubtitles_ScrollView.scrollTop = ypos;
     
+}
+
+
+
+
+
+
+
+
+
+
+
 
 function AddLanguageOptions(element){
 
@@ -729,4 +718,160 @@ function PrintLocalStorage(){
             console.log(result);
         }
     );
+}
+
+var autocompletedFeatureID;
+
+var lastGetAutocompleteRequest = 0;
+var AutocompleteRequestDelay = 500;//ms
+var AutocompleteMaxShowResuts = 10;
+var lastAutoCompleteOptions;
+var finishAutoCompleteTimoutID;
+function GetAutocompleteOptions(){
+    var a, val = this.value;
+    /*close any already open lists of autocompleted values*/
+    closeAutocompleteLists();
+    if (!val) { return false;}
+    currentFocus = -1;
+    /*create a DIV element that will contain the items (values):*/
+    a = document.createElement("DIV");
+    a.setAttribute("id", this.id + "autocomplete-list");
+    a.setAttribute("class", "autocomplete-items");
+    /*append the DIV element as a child of the autocomplete container:*/
+    this.parentNode.appendChild(a);
+
+    arr = ["John Wick","John Wick 3","Murder Mystery","Pirates Of The Caribbian"];
+    if(val.length >= 3){
+        if((Date.now() - lastGetAutocompleteRequest > AutocompleteRequestDelay)){
+            RequestAutoCompleteOptions(val);
+        }else if(lastAutoCompleteOptions){
+            AddAutoCompleteOptions(lastAutoCompleteOptions);
+            //Run it automatically after delay, so if any input happened in that period it updates without needing additional input
+            clearTimeout ( finishAutoCompleteTimoutID );
+            finishAutoCompleteTimoutID = setTimeout (function() {RequestAutoCompleteOptions(val);}, AutocompleteRequestDelay );
+        }
+    }
+
+    
+    
+}
+
+function RequestAutoCompleteOptions(searchQuery) {
+    lastGetAutocompleteRequest = Date.now();
+    var input = SearchSubtitlesInput.value;
+    var searchQuery = input.replaceAll(' ','+').toLowerCase();
+    console.log(`Searching Features: `+ searchQuery);
+    
+    if(IsSeriesToggle.checked)searchQuery += '&type=tvshow';
+    else searchQuery += '&type=movie';
+
+    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': ApiKey}, mode: 'cors',};
+    const url = `https://api.opensubtitles.com/api/v1/features?query=${searchQuery}`;
+
+    console.log(`Getting Features, api url: ${url}`);
+    fetch(url, options)
+    .then(response => response.json())
+    .then(response => {
+        //console.log(response); 
+
+        if(!response || !response.data){
+            var SomethingWentWrong = document.createElement('p');
+            SomethingWentWrong.innerHTML = "Something went wrong";
+            if(response.data.length == 0)
+            SomethingWentWrong.innerHTML = "No Results";
+
+            if(!response && response.errors){
+                SomethingWentWrong.innerHTML = response.errors[0];
+            }
+
+            SearchSubtitlesResultsContainer.appendChild(SomethingWentWrong);
+            return;
+        }
+
+        AutocompleteResults = [];
+
+        //Add movies to list
+        for (let i = 0; i < response.data.length; i++) {
+            if(response.data[i].attributes.feature_type === "Episode") continue;
+            if(!response.data[i].attributes.subtitles_counts[LanguageSelect.value]) continue;
+            //if(!response.data[i].attributes.subtitles_counts[LanguageSelect.value]) continue;
+            var _subtitleResultListItem = SubtitleResultListItem.cloneNode(true);
+            //SearchSubtitlesResultsContainer.appendChild(_subtitleResultListItem);
+            
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Title").innerHTML = response.data[i].attributes.title;
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_FullName").innerHTML = "()";
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_Downloads").innerHTML = response.data[i].attributes.subtitles_counts[LanguageSelect.value];
+            //_subtitleResultListItem.querySelector(".SubtitleResultListItem_TrustedUserIcon").style = response.data[i].attributes.from_trusted===true ? "" : "filter: opacity(0.15);";
+            //_subtitleResultListItem.querySelector(".SubtitleResultListItem_AITranslatedIcon").style = response.data[i].attributes.ai_translated===true? "" : "filter: opacity(0.15);";
+            
+            _subtitleResultListItem.addEventListener("click", function() {
+                console.log(`Clicked [${i}] movie: ${response.data[i].attributes.title}`); 
+            });
+            //SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
+            
+            var subs = response.data[i].attributes.subtitles_counts[LanguageSelect.value];
+            var longestMatchPercentage = longestCommonSubstring(input, response.data[i].attributes.title) / input.length;
+            var levenshteinDistance = levenshtein(input,response.data[i].attributes.title);
+            var matchingScore = Math.log2(subs) * 10 / (levenshteinDistance + 10) * longestMatchPercentage;
+            AutocompleteResults.push(
+                {matchingScore:matchingScore, longestMatch:longestMatchPercentage, levenshteinDistance:levenshteinDistance,subs:subs,data:response.data[i]}
+            );
+        }
+
+        console.log(AutocompleteResults);
+
+        var sorted = AutocompleteResults.sort((a, b) => (a.matchingScore < b.matchingScore ? 1 : -1));
+        sorted.length = Math.min(sorted.length, AutocompleteMaxShowResuts);
+        var sortedData = sorted.map(a => a.data);
+        
+        //console.log(sortedData);
+
+        AddAutoCompleteOptions(sortedData);
+
+    }).catch(err => console.error(err));
+}
+
+function AddAutoCompleteOptions(arr){
+    lastAutoCompleteOptions = arr;
+    var b, val = SearchSubtitlesInput.value;
+
+    var container = document.getElementById(SearchSubtitlesInput.id + "autocomplete-list");
+    container.innerHTML = ""; //Clear children
+
+    /*for each item in the array...*/
+    for (i = 0; i < arr.length; i++) {
+        /*create a DIV element for each matching element:*/
+        b = document.createElement("DIV");
+        /*make the matching letters bold:*/
+        var optionname = arr[i].attributes.title;
+        b.innerHTML = optionname;
+        //b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+        //b.innerHTML += arr[i].substr(val.length);
+        /*insert a input field that will hold the current array item's value:*/
+        b.innerHTML += "<input type='hidden' value='" + i + "'>";
+        /*execute a function when someone clicks on the item value (DIV element):*/
+        b.addEventListener("click", function(e) {
+            /*insert the value for the autocomplete text field:*/
+            //var data =this.getElementsByTagName("input")[0].value;
+            var i = this.getElementsByTagName("input")[0].value;
+            SearchSubtitlesInput.value = lastAutoCompleteOptions[i].attributes.title
+            autocompletedFeatureID = lastAutoCompleteOptions[i].id;
+            /*close the list of autocompleted values,
+            (or any other open lists of autocompleted values:*/
+            closeAutocompleteLists();
+        });
+        container.appendChild(b);
+           
+    }
+}
+
+function TestApi(url){
+    const options = {method: 'GET', headers: {'Content-Type': 'application/json', 'Api-Key': ApiKey}, mode: 'cors',};
+    console.log(`Getting Subtitles, api url: ${url}`);
+    fetch(url, options)
+    .then(response => response.json())
+    .then(response => {
+        console.log(response);
+    }).catch(err => console.error(err));
+
 }

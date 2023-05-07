@@ -9,11 +9,15 @@
 
         <div id="SearchBox">
             <div id="SearchBox1">
-                <select name="language" id="LanguageSelect">
-                    <option value="en">English</option>
-                    <option value="fr">French</option>
-                </select>
-                <input id="SearchSubtitlesInput" type="text" placeholder="Movie Name...">
+                <button id="SubtitleTypeButton">
+                    <img id="MovieIcon" src="images/movie.svg">
+                    <img id="SeriesIcon" src="images/series.svg">
+                    <div id="SubtitleTypeText">Movie</div>
+                    <input type="checkbox" hidden>
+                </button>
+                <div class="autocomplete">
+                    <input id="SearchSubtitlesInput" type="text" placeholder="Movie Name..." autocomplete="off">
+                </div>
                 <button id="SearchSubtitlesButton"><img src="images/search.svg"></button>
 
                 <label id="ImportSubtitlesButton" for="ImportSubtitles">
@@ -22,10 +26,18 @@
                 </label>
             </div>
             <div id="SearchBox2">
-                <input type="checkbox" id="HearingImpaired"><label>Hearing impaired</label>
-                <input type="checkbox" id="ForeignPartsOnly"><label>Foreign parts only</label>
-                <label id="SeasonLabel">Season:</label> <input id="SeasonNumber" type="number" placeholder="nr.">
-                <label id="EpisodeLabel">Episode:</label> <input id="EpisodeNumber" type="number" placeholder="nr.">
+                <select name="language" id="LanguageSelect">
+                    <option value="en">English</option>
+                    <option value="fr">French</option>
+                </select>
+                <img src="images/hearing_impaired.svg" title="Hearing Impaired">
+                <input type="checkbox" id="HearingImpaired" title="Hearing Impaired">
+                <img src="images/foreign_parts_only.svg" title="Foreign Parts Only">
+                <input type="checkbox" id="ForeignPartsOnly" title="Foreign Parts Only">
+                <div id="SeriesOptions">
+                    <label id="SeasonLabel">Season:</label> <input id="SeasonNumber" type="number" placeholder="nr.">
+                    <label id="EpisodeLabel">Episode:</label> <input id="EpisodeNumber" type="number" placeholder="nr.">
+                </div>
             </div>            
         </div>
         <div id="SearchSubtitlesResultsContainer">

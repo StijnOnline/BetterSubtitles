@@ -1,18 +1,31 @@
 TODO:
 
+netflix focus anoying
+
+Show icon when id is linked
+
+maybe other design for subtitle list
+
 icon in hotbar with:
     - reselect subtitle file
     - resync audio
     - micro adjust audio sync
+
+assosiated links where it shows up
 
 explanation in audio sync menu
 
 DetectvideoPlayer: better videoPlayer name (get title)
 auto insert title into search
 
-Language options
-
 Better search, how to use feature query with subtitle query smart
 
-{\an8} tag should mean on top?
+Subtitle Position: {\an8} tag should mean on top? other ways they should be positioned?
+
 Settings page?
+
+
+Publish on github & chrome extension store?
+open source stuff
+todo stuff
+polish

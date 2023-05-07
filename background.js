@@ -32,7 +32,7 @@ function Inject(injectedEvent){
                     
                     chrome.scripting.executeScript({
                         target: { tabId: tab.id },
-                        files: ["./foreground.js"]
+                        files: ["./BetterSubtitles_Helper.js","./foreground.js"]
                     })
                     .then(() => {
                         console.log("INJECTED THE FOREGROUND SCRIPT.");
