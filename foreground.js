@@ -58,6 +58,7 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         SearchSubtitlesInput.addEventListener("keydown",function(e){
             //if(e.keyCode == 13) SearchFeatures();
             autocompletedFeatureID=null;
+            SearchSubtitlesInput.classList.remove('linked');
         });
         CreateAutocomplete(SearchSubtitlesInput,GetAutocompleteOptions);
         
@@ -79,7 +80,6 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
             }
 
             VideoOverlayHTML.querySelector("#SeriesOptions").hidden = !IsSeriesToggle.checked;
-            GetAutocompleteOptions();
         });
         SubtitleTypeSelect.click();
         SubtitleTypeSelect.click();
@@ -740,7 +740,6 @@ function GetAutocompleteOptions(){
     /*append the DIV element as a child of the autocomplete container:*/
     this.parentNode.appendChild(a);
 
-    arr = ["John Wick","John Wick 3","Murder Mystery","Pirates Of The Caribbian"];
     if(val.length >= 3){
         if((Date.now() - lastGetAutocompleteRequest > AutocompleteRequestDelay)){
             RequestAutoCompleteOptions(val);
@@ -856,6 +855,7 @@ function AddAutoCompleteOptions(arr){
             var i = this.getElementsByTagName("input")[0].value;
             SearchSubtitlesInput.value = lastAutoCompleteOptions[i].attributes.title
             autocompletedFeatureID = lastAutoCompleteOptions[i].id;
+            SearchSubtitlesInput.classList.add('linked');
             /*close the list of autocompleted values,
             (or any other open lists of autocompleted values:*/
             closeAutocompleteLists();
