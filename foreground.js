@@ -133,7 +133,7 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         let stopDragging = function (event) {
             if(mouseDown) {
                 SubtitlesSync_TimeOffset += -totalScroll / SyncSubtitles_TimeToPixelRatio;
-                console.log(`Adjusting Sync by ${-totalScroll / SyncSubtitles_TimeToPixelRatio}, now ${SubtitlesSync_TimeOffset}`); 
+                //console.log(`Adjusting Sync by ${-totalScroll / SyncSubtitles_TimeToPixelRatio}, now ${SubtitlesSync_TimeOffset}`); 
             }
             mouseDown = false;
             totalScroll=0;
@@ -154,9 +154,11 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         SyncSubtitles_ScrollView.addEventListener('mouseleave', stopDragging, false);
         SyncSubtitles_ScrollView.addEventListener('mousewheel', MouseWheelHandler, false);
 
-        //Disable Normal scroll
+        //Normal scroll
         function MouseWheelHandler(e) {
-            e.preventDefault();
+            SubtitlesSync_TimeOffset += e.deltaY / SyncSubtitles_TimeToPixelRatio;
+            //console.log(`Adjusting Sync by ${e.deltaY / SyncSubtitles_TimeToPixelRatio}, now ${SubtitlesSync_TimeOffset}`); 
+            //e.preventDefault();
             e.stopPropagation();
             return false;
         }
@@ -510,7 +512,7 @@ function GetSubtitle(subtitleData){
                 SubtitlesData = result[subtitleData.id].subtitles;
                 AddSubtitles();
                 UpdateSubtitles();
-                SetOverlayState("Subtitles");
+                SetOverlayState("SyncSubtitles");
             }else{
                 console.log(`Failed to load Subtitle from cache, id: ${subtitleData.id}`);
                 DownloadRequestSubtitle(subtitleData);
