@@ -30,6 +30,9 @@ var SyncSubtitles_ArrowMarker;
 var SyncSubtitles_TimeToPixelRatio = 25;
 var SubtitlesSync_TimeOffset = 0;
 
+var ErrorOverlay;
+var ErrorPopup;
+
 var SubtitlesData = [];//array of subtitles: {startTime,endTime,content}[]
 var CurrentSubtitleIndex = 0;
 var LastVideoTimestamp = 0;
@@ -116,6 +119,9 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
             console.log("Import Changed");
             ImportSubtitle();
         });
+        
+        ErrorOverlay = VideoOverlayHTML.querySelector("#ErrorOverLay");
+        ErrorPopup = VideoOverlayHTML.querySelector("#ErrorPopup");
 
 
 
@@ -335,7 +341,10 @@ function SearchSubtitles(searchQuery) {
             });
             SearchSubtitlesResultsContainer.appendChild(document.createElement('br'));
         }
-    }).catch(err => console.error(err));
+    }).catch(function(err){
+        console.error(err);
+        ShowErrorPopup("Error getting subtitles",err.stack);
+    });
 
     
     var SearchSubtitlesResultsContainer = document.querySelector("#SearchSubtitlesResultsContainer");
@@ -545,7 +554,10 @@ function DownloadRequestSubtitle(subtitleData){
         DownloadSubtitle(subtitleData,response.link);
         
         
-    }).catch(err => console.error(err));
+    }).catch(function(err){
+        console.error(err);
+        ShowErrorPopup("Error requesting subtitle download link",err.stack);
+    });
 
 }
 function DownloadSubtitle(subtitleData, downloadUrl){
@@ -560,7 +572,10 @@ function DownloadSubtitle(subtitleData, downloadUrl){
         //console.log(response);
         ParseSubtitle(response);
         CacheSubtitle(subtitleData);        
-    }).catch(err => console.error(err));
+    }).catch(function(err){
+        console.error(err);
+        ShowErrorPopup("Error downloading subtitle",err.stack);
+    });
 }
 
 function CacheSubtitle(subtitleData){    
@@ -830,7 +845,10 @@ function RequestAutoCompleteOptions(searchQuery) {
 
         AddAutoCompleteOptions(sortedData);
 
-    }).catch(err => console.error(err));
+    }).catch(function(err){
+        console.error(err);
+        ShowErrorPopup("Error getting autocomplete options",err.stack);
+    });
 }
 
 function AddAutoCompleteOptions(arr){
@@ -877,4 +895,14 @@ function TestApi(url){
         console.log(response);
     }).catch(err => console.error(err));
 
+}
+
+function ShowErrorPopup(title, message){
+    ErrorOverlay.hidden=false;
+    ErrorPopup.querySelector("h1").innerHTML = title;
+    ErrorPopup.querySelector("p").innerHTML = message;
+
+    setTimeout(function(){
+        ErrorOverlay.hidden=true;
+    },5000);
 }
