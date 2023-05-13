@@ -58,8 +58,11 @@
 
 
 #SearchBox {    
-    height: 90px;
+    display: flex;
+    flex-direction: column;
+
     padding: 20px;
+    padding-bottom: 10px;
 
     background-color: #00000040;
     color: black;
@@ -222,6 +225,15 @@
     height: 20px;
     font-size: 22px;
 }
+#OpenSubtitlesAttribution{
+    padding-top: 5px;
+    color: #d0cfcf;
+    font-size: 12px;
+}
+#OpenSubtitlesAttribution a{
+    color: white;
+    text-decoration: underline;
+}
 
 
 #SearchSubtitlesResultsContainer{
@@ -229,8 +241,12 @@
     padding-bottom: 20px;
 }
 .SubtitleResultListItem{
+    background-color: #313131db;
+    color: white;
+    border: none;
+    border-left: 5px solid red;
+
     margin: 8px 0 0 20px;
-    color: black;
     width: 95%;
     text-align: left;
     height: 64px;
@@ -249,7 +265,7 @@
     display: flex;
     align-items: center;
     border-top: 1px solid grey;
-    background: #d9d9d9;
+    background-color: #00000054;
 }
 .SubtitleResultListItem img{
     width: 22px;
@@ -260,6 +276,7 @@
 }
 .SubtitleResultListItem_DownloadsIcon{
     margin-left: 10px;
+    filter: invert(1);
 }
 
 #Subtitles{

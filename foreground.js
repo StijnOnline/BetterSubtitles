@@ -260,6 +260,7 @@ function SetOverlayState(state) {
     if(state === 'SyncSubtitles') {
         InitSyncMode();
     };
+    
 
     CurrentState = state;
 }
@@ -325,8 +326,8 @@ function SearchSubtitles(searchQuery) {
             _subtitleResultListItem.querySelector(".SubtitleResultListItem_Title").innerHTML = response.data[i].attributes.feature_details.title;
             _subtitleResultListItem.querySelector(".SubtitleResultListItem_FullName").innerHTML = "(" + response.data[i].attributes.release + ")";
             _subtitleResultListItem.querySelector(".SubtitleResultListItem_Downloads").innerHTML = response.data[i].attributes.download_count;
-            _subtitleResultListItem.querySelector(".SubtitleResultListItem_TrustedUserIcon").style = response.data[i].attributes.from_trusted===true ? "" : "filter: opacity(0.15);";
-            _subtitleResultListItem.querySelector(".SubtitleResultListItem_AITranslatedIcon").style = response.data[i].attributes.ai_translated===true? "" : "filter: opacity(0.15);";
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_TrustedUserIcon").style = response.data[i].attributes.from_trusted===true ? "filter: invert(1);" : "filter: invert(1)opacity(0.25);";
+            _subtitleResultListItem.querySelector(".SubtitleResultListItem_AITranslatedIcon").style = response.data[i].attributes.ai_translated===true? "filter: invert(1);" : "filter: invert(1)opacity(0.25);";
 
             _subtitleResultListItem.addEventListener("click", function() {
                 console.log(`Clicked [${i}] movie: ${response.data[i].attributes.feature_details.title}`); 
