@@ -37,6 +37,10 @@ var SubtitlesData = [];//array of subtitles: {startTime,endTime,content}[]
 var CurrentSubtitleIndex = 0;
 var LastVideoTimestamp = 0;
 
+var lastMouseMove = 0;
+var QuickSettings;
+var MouseOverQuickSettings;
+
 //Load overlay HTML
 var VideoOverlayHTML = document.createElement('DIV');
 VideoOverlayHTML.id = "BetterSubtitlesOverlay";
@@ -49,10 +53,12 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
             img.src = chrome.runtime.getURL(img.getAttribute('src'));
         });
 
+        
+
         //Add listeners
         var CloseOverlayButton = VideoOverlayHTML.querySelector("#CloseOverlay");
         CloseOverlayButton.addEventListener("click", function() {
-            SetOverlayState("None")
+            SetOverlayState("None");
         });
 
 
@@ -68,7 +74,6 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         var SearchSubtitlesButton = VideoOverlayHTML.querySelector("#SearchSubtitlesButton");
         SearchSubtitlesButton.addEventListener("click", function() {
             SearchSubtitles();
-            //SearchFeatures();
         });
         var SubtitleTypeSelect = VideoOverlayHTML.querySelector("#SubtitleTypeButton");
         IsSeriesToggle = VideoOverlayHTML.querySelector("#SubtitleTypeButton input");
@@ -87,6 +92,7 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         SubtitleTypeSelect.click();
         SubtitleTypeSelect.click();
 
+        
         LanguageSelect = VideoOverlayHTML.querySelector("#LanguageSelect");
         HearingImpaired = VideoOverlayHTML.querySelector("#HearingImpaired");
         ForeignPartsOnly = VideoOverlayHTML.querySelector("#ForeignPartsOnly");
@@ -100,15 +106,15 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         LanguageSelect.addEventListener("change",SaveSearchOptions);
         HearingImpaired.addEventListener("change",SaveSearchOptions);
         ForeignPartsOnly.addEventListener("change",SaveSearchOptions);
-
+        
         SyncSubtitles = VideoOverlayHTML.querySelector("#SyncSubtitles");
         SyncSubtitles_TimeLine = VideoOverlayHTML.querySelector("#SyncSubtitles_TimeLine");
         SyncSubtitles_Subs = VideoOverlayHTML.querySelector("#SyncSubtitles_Subs");
         SyncSubtitles_Item = VideoOverlayHTML.querySelector(".SyncSubtitles_SubtitleItem");
         SyncSubtitles_Subs.removeChild(SyncSubtitles_Item);//remove template item
         SyncSubtitles_ArrowMarker = VideoOverlayHTML.querySelector("#SyncSubtitles_TimeMarkerArrow");
-
-
+        
+        
         HearingImpaired.addEventListener("click", function() {
             if(HearingImpaired.checked) ForeignPartsOnly.checked = false;
         });
@@ -122,9 +128,33 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
         
         ErrorOverlay = VideoOverlayHTML.querySelector("#ErrorOverLay");
         ErrorPopup = VideoOverlayHTML.querySelector("#ErrorPopup");
+        
+        QuickSettings = VideoOverlayHTML.querySelector("#QuickSettings");
+        QuickSettings.addEventListener("mouseover",function(){
+            MouseOverQuickSettings = true;
+        });
+        QuickSettings.addEventListener("mouseleave",function(){
+            MouseOverQuickSettings = false;
+        });
+        VideoOverlayHTML.querySelector("#ReselectSubtitle").addEventListener("click", function(){
+            SetOverlayState("SearchSubtitles");
+        })
+        VideoOverlayHTML.querySelector("#RemoveSubtitles").addEventListener("click", function(){
+            SetOverlayState("None");
+        })
+        VideoOverlayHTML.querySelector("#EnterSyncMode").addEventListener("click", function(){
+            SetOverlayState("SyncSubtitles");
+        })
 
+        var quickSyncButtons = VideoOverlayHTML.querySelectorAll("#QuickSync button");
+        quickSyncButtons.forEach(element => {
+            if(element.id === "#RemoveSubtitles") return;
 
-
+            element.addEventListener("click", function(){
+                SubtitlesSync_TimeOffset += parseFloat(element.value);
+                console.log(`Adjusting Sync by ${parseFloat(element.value)}, now ${SubtitlesSync_TimeOffset}`); 
+            })
+        });
 
         
         SyncSubtitles_ScrollView = VideoOverlayHTML.querySelector('#SyncSubtitles_Subs');
@@ -174,13 +204,19 @@ fetch(chrome.runtime.getURL("Data/BetterSubtitlesOverlay.html"))
             SetOverlayState("Subtitles");
         });
         
-    });
+    }
+);
 
+window.addEventListener("mousemove",MouseMoved);
+
+setInterval(CheckLastMouseMove,500);
 
 
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if(request.message){console.log("Received message: " + request.message);}
+    if(request.message){
+        //console.log("Received message: " + request.message);
+    }
 
     if (request.message === 'CheckInjected') {
         sendResponse({message:"already injected"});
@@ -253,7 +289,9 @@ function SetOverlayState(state) {
     VideoOverlayHTML.querySelector('#VideoHighlight').hidden = (state !== 'Highlight');
     VideoOverlayHTML.querySelector('#SearchSubtitlesOverlay').hidden = (state !== 'SearchSubtitles');
     VideoOverlayHTML.querySelector('#SyncSubtitles').hidden = (state !== 'SyncSubtitles');
+    VideoOverlayHTML.querySelector('#QuickSettings').hidden = true;
     SubtitlesHTML.hidden = (state !== 'Subtitles');
+
     if(SelectedVideo) {
         SelectedVideo.removeEventListener("timeupdate",UpdateSubtitles);
         SelectedVideo.removeEventListener("timeupdate",UpdateSyncMode);
@@ -905,4 +943,19 @@ function ShowErrorPopup(title, message){
     setTimeout(function(){
         ErrorOverlay.hidden=true;
     },5000);
+}
+
+function MouseMoved(){
+    lastMouseMove = Date.now();
+    
+    QuickSettings.hidden = false;    
+}
+
+function CheckLastMouseMove(){
+    if(CurrentState!=="Subtitles")return;
+    if(MouseOverQuickSettings)return;
+    //has been a sec since move
+    if(Date.now() - lastMouseMove < 2000) return;
+    QuickSettings.hidden = true;
+    
 }

@@ -429,6 +429,57 @@
 }
 
 
+
+
+
+#QuickSettings{
+    width: 300px;
+    height: 210px;
+    
+    position: absolute;
+    right: 0;
+    bottom: 200px;
+
+    z-index: 100000;
+    background-color: #000000bb;
+}
+#QuickSettings h1 {
+    border-left: 5px solid red;
+    font-size: 25px;
+    padding: 5px 10px;
+    margin: 0 0 10px 0;
+}
+#QuickSettings button {
+    background-color: transparent;
+    border: 1px solid white;
+    border-radius: 2px;
+    font-size: 16px;
+}
+#QuickSettings button:hover {
+    background-color: #ffffff33;
+}
+#QuickSettings #ReselectSubtitle {
+    margin: 0px 10px;
+}
+#QuickSettings #RemoveSubtitles {
+    margin: 5px 0px 0px 10px;
+}
+#QuickSettings #EnterSyncMode {
+    margin: 0px;
+    margin-bottom: 5px;
+}
+#QuickSettings #QuickSync {
+    margin: 5px 10px;
+}
+#QuickSettings #QuickSync p {
+    margin: 0px;
+    margin-bottom: 5px;
+    font-size: 20px;
+}
+
+
+
+
 #ErrorOverLay{
     display: flex;
     width: 100%;
@@ -452,6 +503,7 @@
 #ErrorPopup p{
     font-size: 20px;
 }
+
 
 
 
