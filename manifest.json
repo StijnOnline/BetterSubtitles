@@ -4,18 +4,18 @@
     "version": "0.1.0",
     "manifest_version": 3,
     "icons": {
-        "128": "./images/BetterSubtitles128.png"
+        "128": "./images/BetterSubtitles_128.png"
     },
     "background": {
-        "service_worker": "./background.js"
+        "service_worker": "./BetterSubtitles_serviceworker.js"
     },
     "action": {
-        "default_popup": "./popup.html",
+        "default_popup": "./BetterSubtitles_popup.html",
         "default_icons": {
-            "128": "./images/BetterSubtitles128.png"
+            "128": "./images/BetterSubtitles_128.png"
         }
     },
-    "options_page": "./options.html",
+    "options_page": "./BetterSubtitles_options.html",
     "permissions": [
         "activeTab",
         "tabs",

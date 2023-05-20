@@ -79,6 +79,7 @@
     align-items: center;
     margin-right: 20px;
     border-radius: 5px;
+    font-size: 30px;
 }
 #SubtitleTypeButton img{
     padding: 0 5px;
@@ -89,6 +90,8 @@
 #SearchSubtitlesInput {
     height: 44px;
     width: 750px;
+    
+    font-size: 30px;
 
     border-radius: 10px;
     background-color: white;
@@ -454,6 +457,7 @@
     border: 1px solid white;
     border-radius: 2px;
     font-size: 16px;
+    color: white;
 }
 #QuickSettings button:hover {
     background-color: #ffffff33;

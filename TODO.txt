@@ -1,31 +1,30 @@
 TODO:
 
-netflix focus anoying
+Api key in script? protect?
 
-Show icon when id is linked
+how does packing work?
 
-maybe other design for subtitle list
-
-icon in hotbar with:
-    - reselect subtitle file
-    - resync audio
-    - micro adjust audio sync
-
-assosiated links where it shows up
-
-explanation in audio sync menu
-
-DetectvideoPlayer: better videoPlayer name (get title)
-auto insert title into search
-
-Better search, how to use feature query with subtitle query smart
-
-Subtitle Position: {\an8} tag should mean on top? other ways they should be positioned?
-
-Settings page?
-
-
+written info in options and for git / store
 Publish on github & chrome extension store?
 open source stuff
 todo stuff
 polish
+
+
+======Later=======
+Better Logo
+
+more opensubtitles.com attribution?: https://trac.opensubtitles.org/projects/opensubtitles/wiki/DevReadFirst
+
+further css design for popup
+
+Settings page
+    - Custom CSS
+
+Subtitle Position: {\an8} tag should mean on top? other ways they should be positioned?
+
+netflix focus anoying
+
+DetectvideoPlayer: better videoPlayer name (get title)
+auto insert title into search?
+

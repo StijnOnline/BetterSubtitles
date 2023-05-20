@@ -8,6 +8,14 @@ function ParseTimeStamp(t){
             Number(t.split(',')[1]) * 0.001; //miliseconds
 }
 
+//https://stackoverflow.com/questions/1322732/convert-seconds-to-hh-mm-ss-with-javascript
+function SecondsToTimestamp(SECONDS){
+    if(SECONDS<3600){
+        return new Date(SECONDS * 1000).toISOString().substring(14, 19);
+    }
+    return new Date(SECONDS * 1000).toISOString().substring(11, 19);
+}
+
 
 //from https://stackoverflow.com/a/35279162
 function levenshtein(s, t) {

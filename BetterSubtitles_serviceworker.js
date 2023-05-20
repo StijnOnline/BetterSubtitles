@@ -25,14 +25,14 @@ function Inject(injectedEvent){
 
                 chrome.scripting.insertCSS({
                     target: { tabId: tab.id },
-                    files: ["./foreground_styles.css"]
+                    files: ["./BetterSubtitles_inject_styles.css"]
                 })
                 .then(() => {
                     console.log("INJECTED THE FOREGROUND STYLES.");
                     
                     chrome.scripting.executeScript({
                         target: { tabId: tab.id },
-                        files: ["./BetterSubtitles_Helper.js","./foreground.js"]
+                        files: ["./BetterSubtitles_Helper.js","./BetterSubtitles_inject.js"]
                     })
                     .then(() => {
                         console.log("INJECTED THE FOREGROUND SCRIPT.");

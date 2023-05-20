@@ -250,7 +250,10 @@ function DetectVideoPlayers(){
     document.querySelectorAll('video').forEach(video => {
         if(video.src) {
             VideoPlayers.push(video);
-            videoPlayerTexts.push(video.src);
+            var videoPlayerDisplayString;
+            //videoPlayerDisplayString = video.src;
+            videoPlayerDisplayString = `${SecondsToTimestamp(video.currentTime)} of ${SecondsToTimestamp(video.duration)}`;
+            videoPlayerTexts.push(videoPlayerDisplayString);
         }
     });
     return videoPlayerTexts;
@@ -948,7 +951,7 @@ function ShowErrorPopup(title, message){
 function MouseMoved(){
     lastMouseMove = Date.now();
     
-    QuickSettings.hidden = false;    
+    QuickSettings.hidden = CurrentState!=="Subtitles";
 }
 
 function CheckLastMouseMove(){
